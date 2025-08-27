@@ -1,0 +1,189 @@
+﻿@model IEnumerable<DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.Camisa>
+
+@if (Model?.Any() == true)
+{
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        Se encontraron <strong>@Model.Count()</strong> camisas. Haga clic en "Seleccionar" para agregar al carrito.
+    </div>
+
+    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+        <table class="table table-hover table-striped">
+            <thead class="table-dark sticky-top">
+                <tr>
+                    <th width="8%">ID</th>
+                    <th width="20%">Descripción</th>
+                    <th width="15%">Marca</th>
+                    <th width="10%">Color</th>
+                    <th width="8%">Talla</th>
+                    <th width="10%">Manga</th>
+                    <th width="10%" class="text-end">P. Venta</th>
+                    <th width="8%" class="text-center">Stock</th>
+                    <th width="11%" class="text-center">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr class="@(c.stock <= 0 ? "table-warning" : c.stock <= 5 ? "table-light" : "")">
+                        <td>
+                            <span class="badge bg-secondary">@c.id_camisa</span>
+                        </td>
+                        <td>
+                            <strong>@c.descripcion</strong>
+                            @if (c.stock <= 0)
+                            {
+                                <br>
+
+                                <small class="text-warning"><i class="fas fa-exclamation-triangle"></i> Sin Stock</small>
+                            }
+                            else if (c.stock <= 5)
+                            {
+                                <br>
+
+                                <small class="text-warning"><i class="fas fa-exclamation-circle"></i> Stock Bajo</small>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge bg-info text-dark">@(c.marca_nombre ?? "N/A")</span>
+                        </td>
+                        <td>
+                            <span class="badge" style="background-color: @GetColorBadge(c.color); color: @GetTextColor(c.color);">
+                                @c.color
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-outline-secondary">@c.talla</span>
+                        </td>
+                        <td>@c.manga</td>
+                        <td class="text-end">
+                            <strong class="text-success">S/. @c.precio_venta.ToString("N2")</strong>
+                            @if (c.precio_costo > 0)
+                            {
+                                <br>
+
+                                <small class="text-muted">Costo: S/. @c.precio_costo.ToString("N2")</small>
+                            }
+                        </td>
+                        <td class="text-center">
+                            @if (c.stock > 10)
+                            {
+                                <span class="badge bg-success">@c.stock</span>
+                            }
+                            else if (c.stock > 0)
+                            {
+                                <span class="badge bg-warning text-dark">@c.stock</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">0</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            @if (c.stock > 0)
+                            {
+                                <button type="button"
+                                        class="btn btn-sm btn-success"
+                                        onclick="seleccionarCamisa(@c.id_camisa, '@Html.Raw(Html.Encode(c.descripcion))', @c.precio_venta)"
+                                        title="Seleccionar esta camisa">
+                                    <i class="fas fa-check me-1"></i>Seleccionar
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Sin stock disponible">
+                                    <i class="fas fa-ban me-1"></i>Sin Stock
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.Count() >= 50)
+    {
+        <div class="alert alert-warning mt-2">
+            <i class="fas fa-info-circle me-2"></i>
+            Se muestran los primeros @Model.Count() resultados. Use filtros más específicos para refinar la búsqueda.
+        </div>
+    }
+}
+else
+{
+    <div class="alert alert-warning">
+        <div class="text-center py-3">
+            <i class="fas fa-search fa-2x text-muted mb-3"></i>
+            <h5>No se encontraron camisas</h5>
+            <p class="text-muted mb-3">
+                No hay camisas que coincidan con los criterios de búsqueda especificados.
+            </p>
+            <div class="d-flex justify-content-center gap-2">
+                <button class="btn btn-outline-primary btn-sm" onclick="limpiarFiltros(); buscar();">
+                    <i class="fas fa-eraser me-1"></i>Limpiar Filtros
+                </button>
+                <button class="btn btn-outline-info btn-sm" onclick="cargarTodas();">
+                    <i class="fas fa-list me-1"></i>Mostrar Todas
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    // Función para manejar la selección de camisa con información adicional
+    function mostrarInfoCamisa(id, descripcion, marca, precio, stock) {
+        const info = `
+            <div class="alert alert-info alert-dismissible fade show mt-2">
+                <strong>Camisa seleccionada:</strong><br>
+                <strong>ID:</strong> ${id}<br>
+                <strong>Descripción:</strong> ${descripcion}<br>
+                <strong>Marca:</strong> ${marca}<br>
+                <strong>Precio:</strong> S/. ${precio}<br>
+                <strong>Stock disponible:</strong> ${stock}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+
+        // Mostrar información en el modal si existe un contenedor
+        const infoContainer = document.getElementById('camisa-seleccionada-info');
+        if (infoContainer) {
+            infoContainer.innerHTML = info;
+        }
+    }
+</script>
+
+@functions {
+    string GetColorBadge(string color)
+    {
+        if (string.IsNullOrEmpty(color)) return "#6c757d";
+
+        return color.ToLower() switch
+        {
+            "rojo" or "red" => "#dc3545",
+            "azul" or "blue" => "#0d6efd",
+            "verde" or "green" => "#198754",
+            "amarillo" or "yellow" => "#ffc107",
+            "negro" or "black" => "#212529",
+            "blanco" or "white" => "#f8f9fa",
+            "gris" or "gray" or "grey" => "#6c757d",
+            "rosa" or "pink" => "#d63384",
+            "naranja" or "orange" => "#fd7e14",
+            "violeta" or "purple" => "#6f42c1",
+            "celeste" or "lightblue" => "#0dcaf0",
+            _ => "#6c757d"
+        };
+    }
+
+    string GetTextColor(string color)
+    {
+        if (string.IsNullOrEmpty(color)) return "#fff";
+
+        return color.ToLower() switch
+        {
+            "amarillo" or "yellow" or "blanco" or "white" or "celeste" or "lightblue" => "#000",
+            _ => "#fff"
+        };
+    }
+}
