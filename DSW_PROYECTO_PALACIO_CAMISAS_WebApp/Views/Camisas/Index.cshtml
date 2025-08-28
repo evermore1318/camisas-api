@@ -1,0 +1,64 @@
+﻿@model IEnumerable<Camisa>
+@{
+    ViewData["Title"] = "Camisas";
+}
+<h2>Camisas</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <label>Marca</label>
+        <select name="MarcaId" class="form-select" asp-items="ViewBag.Marcas">
+            <option value="">-- Todas --</option>
+        </select>
+    </div>
+    <div class="col-md-2"><label>Tipo</label><input name="Tipo" class="form-control" /></div>
+    <div class="col-md-2"><label>Talla</label><input name="Talla" class="form-control" /></div>
+    <div class="col-md-2"><label>Manga</label><input name="Manga" class="form-control" /></div>
+    <div class="col-md-2"><label>Color</label><input name="Color" class="form-control" /></div>
+    <div class="col-md-1 align-self-end"><button class="btn btn-primary w-100">Buscar</button></div>
+</form>
+
+<a asp-action="Create" class="btn btn-success mb-2">Registrar Camisa</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Descripción</th>
+            <th>Marca</th>
+            <th>Color</th>
+            <th>Talla</th>
+            <th>Manga</th>
+            <th>Stock</th>
+            <th>PV</th>
+            <th>Estante</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td>@c.id_camisa</td>
+                <td>@c.descripcion</td>
+                <td>@c.marca_nombre</td>
+                <td>@c.color</td>
+                <td>@c.talla</td>
+                <td>@c.manga</td>
+                <td>@c.stock</td>
+                <td>@c.precio_venta.ToString("0.00")</td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@c.id_camisa" class="btn btn-sm btn-info">Ver</a>
+                    <a asp-action="Edit" asp-route-id="@c.id_camisa" class="btn btn-sm btn-warning">Editar</a>
+                    <form asp-action="Delete" asp-route-id="@c.id_camisa" method="post" class="d-inline">
+                        <button class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar?')">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+@if (TempData["msg"] != null)
+{
+     <div class="alert alert-info">@TempData["msg"]</div>
+}
