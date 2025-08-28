@@ -1,0 +1,112 @@
+﻿@model IEnumerable<DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.Pedido>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Lista de Pedidos</h1>
+
+<p>
+    <a asp-action="Create">Nuevo Pedido</a>
+</p>
+
+<form method="get">
+    <div class="row">
+        <div class="col-md-3">
+            <label class="form-label">Proveedor:</label>
+            <select name="proveedor" class="form-select" asp-items="@ViewBag.proveedores"></select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="form-label">Año:</label>
+            <select name="anio" class="form-select" asp-items="@ViewBag.años"></select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Mes:</label>
+            <select name="mes" class="form-select" asp-items="ViewBag.meses"></select>
+        </div>
+        
+    </div>
+    <br />
+    <input class="btn btn-sm btn-outline-primary" type="submit" value="Consultar" />
+    <br />
+    <br />
+    <br />
+    <br />
+</form>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                ID
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Descripcion)
+            </th>
+            <th>
+                Proveedor
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Fecha)
+            </th>
+            <th>
+                Monto (S/.)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Estado)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.IdPedido)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Descripcion)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Proveedor.Nombre)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Fecha)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Monto)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Estado)
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { id=item.IdPedido }) |
+                @Html.ActionLink("Details", "Details", new { id=item.IdPedido }) |
+                @Html.ActionLink("Registrar Pago", "RegistrarPago", "Pagos", new { idPedido = item.IdPedido })
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+<nav>
+    <ul class="pagination">
+        @for (int i = 1; i <= ViewBag.totalPaginas; i++)
+        {
+            <li class="page-item @(i == ViewBag.paginaActual ? "active" : "")">
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-page="@i"
+                   asp-route-numreg="@ViewBag.numreg"
+                   asp-route-proveedor="@ViewBag.proveedorSeleccionado"
+                   asp-route-anio="@ViewBag.anioSeleccionado"
+                   asp-route-mes="@ViewBag.mesSeleccionado">
+                    @i
+                </a>
+            </li>
+        }
+    </ul>
+</nav>

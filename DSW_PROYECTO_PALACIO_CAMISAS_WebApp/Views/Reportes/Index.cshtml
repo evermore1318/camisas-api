@@ -1,0 +1,62 @@
+﻿@model IEnumerable<DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.DTOs.ReporteDiarioDto>
+
+@{
+    ViewData["Title"] = "Reporte Diario";
+}
+
+<h2>Reporte Diario</h2>
+
+<form asp-controller="Reportes" asp-action="Index" method="get" class="row g-3 mb-4">
+    <div class="col-md-4">
+        <label for="fecha" class="form-label">Seleccione la fecha</label>
+        <input type="date" id="fecha" name="fecha" class="form-control" value="@ViewBag.Fecha" required />
+    </div>
+    <div class="col-md-2 align-self-end">
+        <button type="submit" class="btn btn-danger w-100">Generar Reporte</button>
+    </div>
+</form>
+
+@if (Model != null && Model.Any())
+{
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Boleta</th>
+                <th>Marca</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Numero</td>
+                    <td>@item.Boleta</td>
+                    <td>@item.Marca</td>
+                    <td>@item.Cantidad</td>
+                    <td>@item.Precio.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-info">No se encontraron resultados para la fecha seleccionada.</div>
+}
+
+<hr />
+
+<br />
+<a asp-controller="Reportes" asp-action="ExportarPdf" asp-route-fecha="@ViewBag.Fecha" class="btn btn-success">
+    Descargar PDF
+</a>
+<br />
+<br />
+<br />
+<br />
+<a asp-controller="Pedidos" asp-action="Index" class="btn btn-primary">Ir a Pedidos</a>
+
+
