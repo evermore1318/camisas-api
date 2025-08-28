@@ -17,6 +17,10 @@ builder.Services.AddScoped<IMarca, MarcaRepositorio>();
 builder.Services.AddScoped<IEstante, EstanteRepositorio>();
 builder.Services.AddScoped<IVenta, VentaRepositorio>();
 
+builder.Services.AddScoped<IAuth, AuthRepositorio>();
+builder.Services.AddScoped<IUsuario, UsuarioRepositorio>();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

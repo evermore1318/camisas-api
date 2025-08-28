@@ -1,0 +1,278 @@
+﻿@model IEnumerable<DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.Usuario>
+@{
+    ViewData["Title"] = "Gestión de Usuarios";
+    ViewData["Subtitle"] = "Administración de usuarios y permisos del sistema";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="content-wrapper">
+    <!-- Header simple -->
+    <div class="page-header">
+        <h3>Lista de Usuarios</h3>
+        <a href="@Url.Action("Create", "Usuarios")" class="btn-create">
+            <i class="fas fa-plus"></i>
+            Nuevo Usuario
+        </a>
+    </div>
+
+    <!-- Tabla de usuarios -->
+    <div class="table-container">
+        <table class="usuarios-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th>Rol</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <span class="user-id">#@item.IdUsuario.ToString().PadLeft(3, '0')</span>
+                        </td>
+                        <td>
+                            <div class="user-name-cell">
+                                <div class="user-avatar">@item.Nombre.Substring(0, 1).ToUpper()</div>
+                                <span class="user-name">@item.Nombre</span>
+                            </div>
+                        </td>
+                        <td>
+                            @if (item.Estado == "Activo")
+                            {
+                                <span class="badge badge-active">
+                                    <i class="fas fa-check-circle"></i> Activo
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-inactive">
+                                    <i class="fas fa-times-circle"></i> Inactivo
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <span class="role-text">@item.RolDescripcion</span>
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <a href="@Url.Action("Details", new { id = item.IdUsuario })" class="btn-action btn-details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="@Url.Action("Edit", new { id = item.IdUsuario })" class="btn-action btn-edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="@Url.Action("Delete", new { id = item.IdUsuario })" class="btn-action btn-delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (!Model.Any())
+        {
+            <div class="no-data">
+                <i class="fas fa-users"></i>
+                <p>No hay usuarios registrados</p>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .content-wrapper {
+        max-width: 100%;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding: 20px 0;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+        .page-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+    .btn-create {
+        background: #667eea;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        transition: background 0.3s ease;
+    }
+
+        .btn-create:hover {
+            background: #5a6fd8;
+            color: white;
+            text-decoration: none;
+        }
+
+    .table-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .usuarios-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .usuarios-table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .usuarios-table td {
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            vertical-align: middle;
+        }
+
+        .usuarios-table tr:hover {
+            background: #f8f9fa;
+        }
+
+    .user-id {
+        font-family: monospace;
+        font-weight: bold;
+        color: #667eea;
+        font-size: 14px;
+    }
+
+    .user-name-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .user-avatar {
+        width: 35px;
+        height: 35px;
+        background: #667eea;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .user-name {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .badge-active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .badge-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .role-text {
+        color: #495057;
+        font-weight: 500;
+    }
+
+    .actions-cell {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-action {
+        width: 30px;
+        height: 30px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-details {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+        .btn-details:hover {
+            background: #bbdefb;
+            color: #1565c0;
+        }
+
+    .btn-edit {
+        background: #fff3e0;
+        color: #f57c00;
+    }
+
+        .btn-edit:hover {
+            background: #ffe0b2;
+            color: #ef6c00;
+        }
+
+    .btn-delete {
+        background: #ffebee;
+        color: #d32f2f;
+    }
+
+        .btn-delete:hover {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+    }
+
+        .no-data i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .no-data p {
+            margin: 0;
+            font-size: 16px;
+        }
+
+</style>
