@@ -23,6 +23,10 @@ builder.Services.AddScoped<IPago, PagoRepositorio>();
 builder.Services.AddScoped<IFinanzas, FinanzasRepositorio>();
 builder.Services.AddScoped<IReportes, ReporteRepositorio>();
 
+builder.Services.AddScoped<IAuth, AuthRepositorio>();
+builder.Services.AddScoped<IUsuario, UsuarioRepositorio>();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

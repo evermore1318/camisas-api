@@ -1,0 +1,295 @@
+﻿@model DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.Usuario
+@{
+    ViewData["Title"] = "Detalles Usuario";
+    ViewData["Subtitle"] = "Información completa del usuario";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="content-wrapper">
+    <div class="page-header">
+        <h3>Detalles del Usuario</h3>
+        <a href="@Url.Action("Index")" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Volver al Listado
+        </a>
+    </div>
+
+    <div class="details-container">
+        <div class="user-header">
+            <div class="user-avatar">@Model.Nombre.Substring(0, 1).ToUpper()</div>
+            <div class="user-info">
+                <h4>@Model.Nombre</h4>
+                <p>@Model.RolDescripcion</p>
+                @if (Model.Estado == "Activo")
+                {
+                    <span class="badge badge-active">
+                        <i class="fas fa-check-circle"></i> Activo
+                    </span>
+                }
+                else
+                {
+                    <span class="badge badge-inactive">
+                        <i class="fas fa-times-circle"></i> Inactivo
+                    </span>
+                }
+            </div>
+        </div>
+
+        <div class="details-grid">
+            <div class="detail-item">
+                <label>ID Usuario</label>
+                <span class="detail-value">#@Model.IdUsuario.ToString().PadLeft(3, '0')</span>
+            </div>
+
+            <div class="detail-item">
+                <label>Nombre Completo</label>
+                <span class="detail-value">@Model.Nombre</span>
+            </div>
+
+            <div class="detail-item">
+                <label>ID Rol</label>
+                <span class="detail-value">@Model.IdRol</span>
+            </div>
+
+            <div class="detail-item">
+                <label>Descripción del Rol</label>
+                <span class="detail-value">@Model.RolDescripcion</span>
+            </div>
+
+            <div class="detail-item">
+                <label>Estado</label>
+                <span class="detail-value">
+                    @if (Model.Estado == "Activo")
+                    {
+                        <span class="status-text status-active">
+                            <i class="fas fa-check-circle"></i> @Model.Estado
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="status-text status-inactive">
+                            <i class="fas fa-times-circle"></i> @Model.Estado
+                        </span>
+                    }
+                </span>
+            </div>
+
+            <div class="detail-item">
+                <label>Contraseña</label>
+                <span class="detail-value password-hidden">
+                    <i class="fas fa-lock"></i> Oculta por seguridad
+                </span>
+            </div>
+        </div>
+
+        <div class="actions-section">
+            <a href="@Url.Action("Edit", new { id = Model.IdUsuario })" class="btn-primary">
+                <i class="fas fa-edit"></i>
+                Editar Usuario
+            </a>
+            <a href="@Url.Action("Index")" class="btn-secondary">
+                <i class="fas fa-list"></i>
+                Ver Todos los Usuarios
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .content-wrapper {
+        max-width: 800px;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding: 20px 0;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+        .page-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+    .btn-back {
+        background: #6c757d;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        transition: background 0.3s ease;
+    }
+
+        .btn-back:hover {
+            background: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+
+    .details-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .user-header {
+        background: #f8f9fa;
+        padding: 30px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+    .user-avatar {
+        width: 80px;
+        height: 80px;
+        background: #667eea;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 32px;
+    }
+
+    .user-info h4 {
+        margin: 0 0 8px 0;
+        color: #2c3e50;
+        font-size: 24px;
+    }
+
+    .user-info p {
+        margin: 0 0 10px 0;
+        color: #7f8c8d;
+        font-size: 16px;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .badge-active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .badge-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+    }
+
+    .detail-item {
+        padding: 20px 30px;
+        border-right: 1px solid #ecf0f1;
+        border-bottom: 1px solid #ecf0f1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+        .detail-item:nth-child(even) {
+            border-right: none;
+        }
+
+        .detail-item label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+    .detail-value {
+        font-size: 16px;
+        color: #2c3e50;
+        font-weight: 500;
+    }
+
+    .status-text {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-active {
+        color: #155724;
+    }
+
+    .status-inactive {
+        color: #721c24;
+    }
+
+    .password-hidden {
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    .actions-section {
+        padding: 30px;
+        background: #f8f9fa;
+        display: flex;
+        gap: 15px;
+        border-top: 1px solid #ecf0f1;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        transition: background 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            color: white;
+            text-decoration: none;
+        }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        transition: background 0.3s ease;
+    }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+</style>

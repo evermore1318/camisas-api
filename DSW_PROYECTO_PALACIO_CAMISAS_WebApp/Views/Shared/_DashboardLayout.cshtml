@@ -1,0 +1,223 @@
+﻿@{
+    var usuario = Context.Session.GetString("Usuario") ?? "Usuario";
+    var rol = Context.Session.GetString("Rol") ?? "Sin rol";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Sistema ERP</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="~/css/dashboard.css" rel="stylesheet" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <!-- Botón menú móvil -->
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="dashboard-container">
+        <!-- Sidebar - Se mantiene fijo en todas las páginas -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>Sistema ERP</h3>
+                <p>Panel de Control</p>
+            </div>
+            
+            <nav class="nav-menu">
+                <div class="nav-item" id="nav-dashboard">
+                    <a href="@Url.Action("Inicio", "Login")">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                </div>
+                
+                <!-- Mantenimientos -->
+                <div class="nav-item has-submenu" id="nav-mantenimientos">
+                    <a href="#" class="nav-toggle" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-tools"></i>
+                        Mantenimientos
+                        <i class="fas fa-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="@Url.Action("Index", "Camisas")" id="nav-camisas">
+                            <i class="fas fa-tshirt"></i>
+                            Mantenimiento Camisas
+                        </a>
+                        <a href="@Url.Action("Index", "Marcas")" id="nav-marcas">
+                            <i class="fas fa-tag"></i>
+                            Mantenimiento Marcas
+                        </a>
+                        <a href="#" onclick="showComingSoon('Categorías')">
+                            <i class="fas fa-list"></i>
+                            Mantenimiento Categorías
+                        </a>
+                        <a href="#" onclick="showComingSoon('Proveedores')">
+                            <i class="fas fa-truck"></i>
+                            Mantenimiento Proveedores
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Ventas -->
+                <div class="nav-item has-submenu" id="nav-ventas">
+                    <a href="#" class="nav-toggle" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-shopping-cart"></i>
+                        Ventas
+                        <i class="fas fa-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="@Url.Action("Index", "Ventas")" id="nav-gestionar-ventas">
+                            <i class="fas fa-cash-register"></i>
+                            Gestionar Ventas
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Pedidos -->
+                <div class="nav-item has-submenu" id="nav-pedidos">
+                    <a href="#" class="nav-toggle" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-clipboard-list"></i>
+                        Pedidos
+                        <i class="fas fa-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="@Url.Action("Index", "Pedidos")" id="nav-gestionar-pedidos">
+                            <i class="fas fa-list-alt"></i>
+                            Gestionar Pedidos
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Reportes -->
+                <div class="nav-item has-submenu" id="nav-reportes">
+                    <a href="#" class="nav-toggle" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-chart-bar"></i>
+                        Reportes
+                        <i class="fas fa-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="@Url.Action("Index", "Reportes")" id="nav-reporte-diario">
+                            <i class="fas fa-calendar-day"></i>
+                            Reporte Diario
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Usuarios -->
+                <div class="nav-item has-submenu" id="nav-usuarios">
+                    <a href="#" class="nav-toggle" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-users"></i>
+                        Usuarios
+                        <i class="fas fa-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="@Url.Action("Index", "Usuarios")" id="nav-gestionar-usuarios">
+                            <i class="fas fa-user-cog"></i>
+                            Gestionar Accesos
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content - Aquí cambia el contenido -->
+        <div class="main-content">
+            <!-- Top Bar con información del usuario - Se mantiene fijo -->
+            <div class="top-bar">
+                <div class="welcome-text">
+                    <h2>@ViewData["Title"]</h2>
+                    <p>@ViewData["Subtitle"]</p>
+                </div>
+                
+                <!-- Usuario logueado en la esquina -->
+                <div class="user-info">
+                    <div class="user-details">
+                        <span class="user-name">@usuario</span>
+                        <span class="user-role">@rol</span>
+                    </div>
+                    <div class="user-avatar">
+                        @usuario.Substring(0, 1).ToUpper()
+                    </div>
+                    <div class="user-actions">
+                        <div class="dropdown">
+                            <button class="dropdown-btn" onclick="toggleDropdown()">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <div class="dropdown-menu" id="userDropdown">
+                                <a href="#" onclick="showComingSoon('Mi Perfil')">
+                                    <i class="fas fa-user"></i> Mi Perfil
+                                </a>
+                                <a href="#" onclick="showComingSoon('Configuración')">
+                                    <i class="fas fa-cog"></i> Configuración
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a href="@Url.Action("Logout", "Login")" class="logout-link">
+                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido dinámico - Aquí se renderizan las vistas específicas -->
+            <div class="content-area">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <script src="~/js/dashboard.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        // Marcar el elemento activo del menú según la página actual
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentController = '@ViewContext.RouteData.Values["controller"]';
+            const currentAction = '@ViewContext.RouteData.Values["action"]';
+            
+            // Remover clases activas
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Activar según el controlador actual
+            switch(currentController.toLowerCase()) {
+                case 'login':
+                    if(currentAction.toLowerCase() === 'inicio') {
+                        document.getElementById('nav-dashboard')?.classList.add('active');
+                    }
+                    break;
+                case 'camisas':
+                    document.getElementById('nav-mantenimientos')?.classList.add('active');
+                    document.querySelector('#nav-mantenimientos .submenu')?.classList.add('active');
+                    break;
+                case 'marcas':
+                    document.getElementById('nav-mantenimientos')?.classList.add('active');
+                    document.querySelector('#nav-mantenimientos .submenu')?.classList.add('active');
+                    break;
+                case 'ventas':
+                    document.getElementById('nav-ventas')?.classList.add('active');
+                    document.querySelector('#nav-ventas .submenu')?.classList.add('active');
+                    break;
+                case 'pedidos':
+                    document.getElementById('nav-pedidos')?.classList.add('active');
+                    document.querySelector('#nav-pedidos .submenu')?.classList.add('active');
+                    break;
+                case 'reportes':
+                    document.getElementById('nav-reportes')?.classList.add('active');
+                    document.querySelector('#nav-reportes .submenu')?.classList.add('active');
+                    break;
+                case 'usuarios':
+                    document.getElementById('nav-usuarios')?.classList.add('active');
+                    document.querySelector('#nav-usuarios .submenu')?.classList.add('active');
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
