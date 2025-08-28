@@ -59,7 +59,7 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Data
 
         public Usuario Registrar(Usuario usuario)
         {
-            Usuario nuevo = null;
+
             int nuevoID = 0;
             using (var conexion = new SqlConnection(cadenaConexion))
             {
@@ -74,8 +74,8 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Data
                     nuevoID = Convert.ToInt32(comando.ExecuteScalar());
                 }
             }
-            nuevo = ObtenerPorID(nuevoID);
-            return nuevo;
+            return ObtenerPorID(nuevoID);
+            
         }
 
         public Usuario ActualizarEstado(int id, string nuevoEstado)

@@ -35,9 +35,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label asp-for="IdRol">Rol del Usuario</label>
-                    <select name="IdRol" class="form-input" asp-items="@ViewBag.Roles">
-                        <option value="">Seleccione un rol</option>
-                    </select>
+                    <select asp-for="IdRol" class="form-input" asp-items="@ViewBag.Roles"></select>
                     <span asp-validation-for="IdRol" class="validation-error"></span>
                 </div>
 
