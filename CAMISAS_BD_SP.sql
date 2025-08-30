@@ -316,3 +316,321 @@ BEGIN
     WHERE id_camisa = @id_camisa
 END
 GO
+
+
+----------------------------------------------------
+-- PROCEDIMIENTOS ALMACENADOS 2 MIGUEL Y NAYELI
+
+ALTER PROCEDURE LoginUsuario
+    @Usuario NVARCHAR(50),
+    @Clave NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP 1 
+        U.id_usuario,
+        U.nombre,
+        R.descripcion
+    FROM USUARIO U
+    INNER JOIN ROL R ON U.id_rol = R.id_rol
+    WHERE U.nombre = @Usuario
+      AND U.password = @Clave
+      AND LOWER(U.estado) = 'activo';
+END
+GO
+
+CREATE OR ALTER PROC ListarRoles
+AS
+BEGIN
+    SELECT id_rol AS IdRol,
+           descripcion AS Descripcion,
+           estado AS Estado
+    FROM ROL
+    ORDER BY descripcion;
+END
+GO
+
+
+CREATE OR ALTER PROC ListarUsuarios
+AS
+BEGIN
+    SELECT  u.id_usuario AS IdUsuario,
+            u.nombre     AS Nombre,
+            u.id_rol     AS IdRol,
+            r.descripcion AS RolDescripcion,
+            u.estado     AS Estado
+    FROM USUARIO u
+    INNER JOIN ROL r ON u.id_rol = r.id_rol;
+END
+GO
+
+
+CREATE OR ALTER PROC ObtenerUsuarioPorID
+    @Id INT
+AS
+BEGIN
+    SELECT  u.id_usuario AS IdUsuario,
+            u.nombre     AS Nombre,
+            u.id_rol     AS IdRol,
+            r.descripcion AS RolDescripcion,
+            u.estado     AS Estado
+    FROM USUARIO u
+    INNER JOIN ROL r ON u.id_rol = r.id_rol
+    WHERE u.id_usuario = @Id;
+END
+GO
+
+
+CREATE OR ALTER PROC RegistrarUsuario
+    @Nombre    VARCHAR(100),
+    @Password  VARCHAR(100),
+    @IdRol     INT,
+    @Estado    VARCHAR(20)
+AS
+BEGIN
+    INSERT INTO USUARIO (nombre, password, id_rol, estado)
+    VALUES (@Nombre, @Password, @IdRol, @Estado);
+
+    SELECT @@IDENTITY; 
+END
+GO
+
+
+CREATE OR ALTER PROC ActualizarEstadoUsuario
+    @Id     INT,
+    @Estado VARCHAR(20)
+AS
+BEGIN
+    UPDATE USUARIO
+       SET estado = @Estado
+     WHERE id_usuario = @Id;
+END
+GO
+
+CREATE OR ALTER PROC EliminarUsuario
+    @Id INT
+AS
+BEGIN
+    DELETE FROM USUARIO
+    WHERE id_usuario = @Id;
+END
+GO
+
+
+CREATE OR ALTER PROC ActualizarPedido
+(
+    @id INT,
+    @descripcion VARCHAR(100),
+    @proveedor INT,
+    @fecha DATE,
+    @monto DECIMAL(10,2),
+    @estado VARCHAR(20)
+)
+AS
+BEGIN
+    UPDATE Pedido
+    SET descripcion = @descripcion,
+        id_proveedor = @proveedor,
+        fecha = @fecha,
+        monto = @monto,
+        estado = @estado
+    WHERE id_pedido = @id;
+END
+GO
+
+CREATE OR ALTER PROCEDURE ListarMarcas
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT id_marca, descripcion, estado
+    FROM MARCA
+    WHERE estado = 'DISPONIBLE';
+END;
+GO
+
+CREATE OR ALTER PROCEDURE ListarPedidos
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        p.id_pedido,
+        p.descripcion,
+        p.id_proveedor,
+        p.fecha,
+        p.monto,
+        p.estado,
+        pr.nombre AS nombre_proveedor
+    FROM PEDIDO p
+    INNER JOIN PROVEEDOR pr ON p.id_proveedor = pr.id_proveedor;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE ListarProveedores
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT id_proveedor, id_marca, nombre, telefono, direccion, email, estado
+    FROM PROVEEDOR;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE ObtenerPagoPorID
+(
+    @ID INT
+)
+AS
+BEGIN
+    SELECT 
+        id_pago,
+        id_pedido,
+        descripcion,
+        fecha,
+        monto,
+        estado
+    FROM PAGO
+    WHERE id_pago = @ID;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE ObtenerPedidoPorID
+    @ID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        p.id_pedido,
+        p.descripcion,
+        p.id_proveedor,
+        p.fecha,
+        p.monto,
+        p.estado,
+        ISNULL(COUNT(pg.id_pago), 0) AS CantidadPagos,
+        ISNULL(SUM(pg.monto), 0) AS MontoTotalPagos,
+        p.monto - ISNULL(SUM(pg.monto), 0) AS DeudaPendiente
+    FROM Pedido p
+    LEFT JOIN Pago pg ON p.id_pedido = pg.id_pedido
+    WHERE p.id_pedido = @ID
+    GROUP BY 
+        p.id_pedido,
+        p.descripcion,
+        p.id_proveedor,
+        p.fecha,
+        p.monto,
+        p.estado;
+END;
+GO
+
+CREATE OR ALTER PROC RegistrarPago
+(
+    @idPedido INT,
+    @descripcion VARCHAR(100),
+    @fecha DATE,
+    @monto DECIMAL(10,2),
+    @estado VARCHAR(20) = 'Activo'
+)
+AS
+INSERT INTO Pago(id_pedido, descripcion, fecha, monto, estado)
+VALUES(@idPedido, @descripcion, @fecha, @monto, @estado);
+
+SELECT SCOPE_IDENTITY();
+GO
+
+CREATE OR ALTER PROC RegistrarPedido
+(
+    @descripcion VARCHAR(250),
+    @proveedor INT,
+    @fecha DATETIME,
+    @monto DECIMAL(10,2),
+    @estado VARCHAR(50) = 'Activo'   -- valor por defecto
+)
+AS
+BEGIN
+    INSERT INTO Pedido (descripcion, id_proveedor, fecha, monto, estado)
+    VALUES (@descripcion, @proveedor, @fecha, @monto, @estado);
+
+    SELECT SCOPE_IDENTITY() AS NuevoId;
+END
+GO
+
+CREATE OR ALTER PROCEDURE sp_EgresosAnuales
+    @Anio INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT ISNULL(SUM(monto), 0) AS EgresosAnuales
+    FROM PAGO
+    WHERE YEAR(fecha) = @Anio
+      AND estado = 'Activo';
+END;
+GO
+
+CREATE OR ALTER PROCEDURE sp_EgresosMensuales
+    @Anio INT,
+    @Mes INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT ISNULL(SUM(monto), 0) AS EgresosMensuales
+    FROM PAGO
+    WHERE YEAR(fecha) = @Anio
+      AND MONTH(fecha) = @Mes
+      AND estado = 'Activo';
+END;
+GO
+
+CREATE OR ALTER PROCEDURE sp_IngresosMensuales
+    @Anio INT,
+    @Mes INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT ISNULL(SUM(precio_total), 0) AS IngresosMensuales
+    FROM VENTA
+    WHERE YEAR(fecha) = @Anio
+      AND MONTH(fecha) = @Mes
+      AND estado = 'Activo';
+END;
+GO
+
+CREATE OR ALTER PROCEDURE sp_IngresosAnuales
+    @Anio INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT ISNULL(SUM(precio_total), 0) AS IngresosAnuales
+    FROM VENTA
+    WHERE YEAR(fecha) = @Anio
+      AND estado = 'Activo';
+END;
+GO
+
+CREATE OR ALTER PROCEDURE sp_reporte_diario
+    @fecha_reporte DATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        CAST(ROW_NUMBER() OVER (ORDER BY v.id_venta) AS int) AS numero,
+        m.descripcion AS marca,
+        dv.cantidad,
+        dv.precio
+    FROM VENTA v
+    INNER JOIN DETALLEVENTA dv ON v.id_venta = dv.id_venta
+    INNER JOIN CAMISA c ON dv.id_camisa = c.id_camisa
+    INNER JOIN MARCA m ON c.id_marca = m.id_marca
+    WHERE v.fecha = @fecha_reporte
+      AND v.estado = 'Activo'
+      AND dv.estado = 'Activo'
+    ORDER BY v.id_venta, m.descripcion;
+END;
+GO

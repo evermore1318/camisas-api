@@ -1,52 +1,344 @@
 ﻿@model DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.Pago
-
 @{
-    ViewData["Title"] = "RegistrarPago";
+    ViewData["Title"] = "Registrar Pago";
+    ViewData["Subtitle"] = "Procesar pago de pedido";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<h1>Registrar Pago</h1>
+<div class="content-wrapper">
+    <!-- Header -->
+    <div class="page-header">
+        <h3>Registrar Pago</h3>
+        <a asp-action="Index" asp-controller="Pedidos" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Volver a Pedidos
+        </a>
+    </div>
 
-<h4>Pago</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="RegistrarPago">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            
-            <div class="form-group">
-                <label class="control-label">Pedido</label>
-                <input type="text" class="form-control" value="@ViewBag.DescripcionPedido" readonly />
-                <input asp-for="IdPedido" type="hidden" />
+    <!-- Contenedor principal -->
+    <div class="form-container">
+        <div class="form-header">
+            <div class="form-icon">
+                <i class="fas fa-credit-card"></i>
             </div>
-            <div class="form-group">
-                <label asp-for="Descripcion" class="control-label"></label>
-                <input asp-for="Descripcion" class="form-control" />
-                <span asp-validation-for="Descripcion" class="text-danger"></span>
+            <div class="form-title">
+                <h4>Información del Pago</h4>
+                <p>Complete los datos para registrar el pago del pedido</p>
             </div>
-            <div class="form-group">
-                <label asp-for="Fecha" class="control-label"></label>
-                <input asp-for="Fecha" class="form-control" />
-                <span asp-validation-for="Fecha" class="text-danger"></span>
+        </div>
+
+        <form asp-action="RegistrarPago" class="pago-form">
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+            <!-- Información del pedido -->
+            <div class="form-section">
+                <h5 class="section-title">
+                    <i class="fas fa-box"></i>
+                    Pedido Asociado
+                </h5>
+                <div class="form-group">
+                    <label class="form-label">Pedido</label>
+                    <input type="text" class="form-control readonly-input" value="@ViewBag.DescripcionPedido" readonly />
+                    <input asp-for="IdPedido" type="hidden" />
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Monto" class="control-label">Monto (S/.)</label>
-                <input asp-for="Monto" class="form-control" />
-                <span asp-validation-for="Monto" class="text-danger"></span>
+
+            <!-- Datos del pago -->
+            <div class="form-section">
+                <h5 class="section-title">
+                    <i class="fas fa-money-bill-wave"></i>
+                    Detalles del Pago
+                </h5>
+
+                <div class="form-group">
+                    <label asp-for="Descripcion" class="form-label">Descripción</label>
+                    <input asp-for="Descripcion" class="form-control" placeholder="Ingrese una descripción del pago" />
+                    <span asp-validation-for="Descripcion" class="field-validation-error"></span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label asp-for="Fecha" class="form-label">Fecha</label>
+                        <input asp-for="Fecha" class="form-control" type="date" />
+                        <span asp-validation-for="Fecha" class="field-validation-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Monto" class="form-label">Monto (S/.)</label>
+                        <div class="input-group">
+                            <div class="input-prefix">S/.</div>
+                            <input asp-for="Monto" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" />
+                        </div>
+                        <span asp-validation-for="Monto" class="field-validation-error"></span>
+                    </div>
+                </div>
             </div>
-            
-            <br />
-            <br />
-            <div class="form-group">
-                <input type="submit" value="Registrar" class="btn btn-primary" />
+
+            <!-- Botones de acción -->
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    Registrar Pago
+                </button>
+                <a asp-action="Index" asp-controller="Pedidos" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </a>
             </div>
         </form>
     </div>
 </div>
-<br />
-<div>
-    <a asp-action="Index" asp-controller="Pedidos">Volver</a>
-</div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
+
+<style>
+    .content-wrapper {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding: 20px 0;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+        .page-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+    .btn-back {
+        background: #95a5a6;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        transition: background 0.3s ease;
+        font-size: 14px;
+    }
+
+        .btn-back:hover {
+            background: #7f8c8d;
+            color: white;
+            text-decoration: none;
+        }
+
+    .form-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .form-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+    }
+
+    .form-title h4 {
+        margin: 0 0 5px 0;
+        color: white;
+        font-size: 22px;
+        font-weight: 600;
+    }
+
+    .form-title p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+    }
+
+    .pago-form {
+        padding: 30px;
+    }
+
+    .validation-summary {
+        background: #ffebee;
+        border: 1px solid #f8bbd9;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 25px;
+        color: #d32f2f;
+    }
+
+        .validation-summary ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+    .form-section {
+        margin-bottom: 30px;
+    }
+
+        .form-section:last-of-type {
+            margin-bottom: 20px;
+        }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        color: #2c3e50;
+        font-size: 16px;
+        font-weight: 600;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #ecf0f1;
+    }
+
+        .section-title i {
+            color: #667eea;
+        }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #2c3e50;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #ecf0f1;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #bdc3c7;
+        }
+
+    .readonly-input {
+        background: #f8f9fa !important;
+        color: #6c757d;
+        cursor: not-allowed;
+    }
+
+    .input-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-prefix {
+        position: absolute;
+        left: 15px;
+        color: #667eea;
+        font-weight: 600;
+        font-size: 14px;
+        z-index: 1;
+    }
+
+    .input-group .form-control {
+        padding-left: 45px;
+    }
+
+    .field-validation-error {
+        display: block;
+        color: #d32f2f;
+        font-size: 12px;
+        margin-top: 5px;
+        font-weight: 500;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        padding-top: 20px;
+        border-top: 1px solid #ecf0f1;
+        margin-top: 30px;
+    }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+        padding: 12px 25px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+    .btn-cancel {
+        background: #95a5a6;
+        color: white;
+        padding: 12px 25px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+
+        .btn-cancel:hover {
+            background: #7f8c8d;
+            color: white;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+
+
+    }
+</style>

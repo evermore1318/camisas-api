@@ -35,10 +35,9 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Data
                             lista.Add(new ReporteDiarioDto
                             {
                                 Numero = reader.GetInt32(0),
-                                Boleta = reader.GetString(1),
-                                Marca = reader.GetString(2),
-                                Cantidad = reader.GetInt32(3),
-                                Precio = reader.GetDecimal(4)
+                                Marca = reader.GetString(1),
+                                Cantidad = reader.GetInt32(2),
+                                Precio = reader.GetDecimal(3)
                             });
                         }
                     }

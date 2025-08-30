@@ -64,11 +64,10 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
                     .SetFontSize(16)
                 );
 
-                var table = new Table(UnitValue.CreatePercentArray(new float[] { 1, 3, 3, 2, 2 }))
+                var table = new Table(UnitValue.CreatePercentArray(new float[] { 1, 3, 2, 2 }))
                     .UseAllAvailableWidth();
 
                 table.AddHeaderCell("N°");
-                table.AddHeaderCell("Boleta");
                 table.AddHeaderCell("Marca");
                 table.AddHeaderCell("Cantidad");
                 table.AddHeaderCell("Precio");
@@ -76,7 +75,6 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
                 foreach (var item in listado)
                 {
                     table.AddCell(new Cell().Add(new Paragraph(item.Numero.ToString())));
-                    table.AddCell(new Cell().Add(new Paragraph(item.Boleta)));
                     table.AddCell(new Cell().Add(new Paragraph(item.Marca)));
                     table.AddCell(new Cell().Add(new Paragraph(item.Cantidad.ToString())));
                     table.AddCell(new Cell().Add(new Paragraph(item.Precio.ToString("C"))));

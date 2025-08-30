@@ -1,62 +1,322 @@
 ﻿@model IEnumerable<DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.DTOs.ReporteDiarioDto>
-
 @{
     ViewData["Title"] = "Reporte Diario";
+    ViewData["Subtitle"] = "Análisis de ventas por fecha";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<h2>Reporte Diario</h2>
-
-<form asp-controller="Reportes" asp-action="Index" method="get" class="row g-3 mb-4">
-    <div class="col-md-4">
-        <label for="fecha" class="form-label">Seleccione la fecha</label>
-        <input type="date" id="fecha" name="fecha" class="form-control" value="@ViewBag.Fecha" required />
+<div class="content-wrapper">
+    <!-- Header -->
+    <div class="page-header">
+        <h3>Reporte Diario</h3>
+        <div class="header-actions">
+            <a asp-controller="Reportes" asp-action="ExportarPdf" asp-route-fecha="@ViewBag.Fecha" class="btn-export">
+                <i class="fas fa-file-pdf"></i>
+                Descargar PDF
+            </a>
+            <a asp-controller="Pedidos" asp-action="Index" class="btn-secondary">
+                <i class="fas fa-box"></i>
+                Ir a Pedidos
+            </a>
+        </div>
     </div>
-    <div class="col-md-2 align-self-end">
-        <button type="submit" class="btn btn-danger w-100">Generar Reporte</button>
+
+    <!-- Formulario de filtro -->
+    <div class="filter-container">
+        <form asp-controller="Reportes" asp-action="Index" method="get" class="filter-form">
+            <div class="form-group">
+                <label for="fecha" class="form-label">Seleccione la fecha</label>
+                <input type="date" id="fecha" name="fecha" class="form-control" value="@ViewBag.Fecha" required />
+            </div>
+            <button type="submit" class="btn-generate">
+                <i class="fas fa-chart-line"></i>
+                Generar Reporte
+            </button>
+        </form>
     </div>
-</form>
 
-@if (Model != null && Model.Any())
-{
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>#</th>
-                <th>Boleta</th>
-                <th>Marca</th>
-                <th>Cantidad</th>
-                <th>Precio</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.Numero</td>
-                    <td>@item.Boleta</td>
-                    <td>@item.Marca</td>
-                    <td>@item.Cantidad</td>
-                    <td>@item.Precio.ToString("C")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <div class="alert alert-info">No se encontraron resultados para la fecha seleccionada.</div>
-}
+    <!-- Tabla de resultados -->
+    <div class="table-container">
+        @if (Model != null && Model.Any())
+        {
+            <table class="reporte-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Marca</th>
+                        <th>Cantidad</th>
+                        <th>Precio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <span class="item-number">#@item.Numero.ToString().PadLeft(3, '0')</span>
+                            </td>
+                            <td>
+                                <div class="marca-cell">
+                                    <div class="marca-icon">@item.Marca.Substring(0, 1).ToUpper()</div>
+                                    <span class="marca-name">@item.Marca</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="cantidad-badge">@item.Cantidad</span>
+                            </td>
+                            <td>
+                                <span class="precio-text">@item.Precio.ToString("C")</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="no-data">
+                <i class="fas fa-chart-line"></i>
+                <p>No se encontraron resultados para la fecha seleccionada</p>
+                <small>Seleccione otra fecha para generar el reporte</small>
+            </div>
+        }
+    </div>
+</div>
 
-<hr />
+<style>
+    .content-wrapper {
+        max-width: 100%;
+    }
 
-<br />
-<a asp-controller="Reportes" asp-action="ExportarPdf" asp-route-fecha="@ViewBag.Fecha" class="btn btn-success">
-    Descargar PDF
-</a>
-<br />
-<br />
-<br />
-<br />
-<a asp-controller="Pedidos" asp-action="Index" class="btn btn-primary">Ir a Pedidos</a>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding: 20px 0;
+        border-bottom: 1px solid #ecf0f1;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
 
+        .page-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 24px;
+        }
 
+    .header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-export {
+        background: #27ae60;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        transition: background 0.3s ease;
+        font-size: 14px;
+    }
+
+        .btn-export:hover {
+            background: #229954;
+            color: white;
+            text-decoration: none;
+        }
+
+    .btn-secondary {
+        background: #667eea;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        transition: background 0.3s ease;
+        font-size: 14px;
+    }
+
+        .btn-secondary:hover {
+            background: #5a6fd8;
+            color: white;
+            text-decoration: none;
+        }
+
+    .filter-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+
+    .filter-form {
+        display: flex;
+        align-items: end;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .form-group {
+        min-width: 200px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #2c3e50;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #ecf0f1;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.3s ease;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+    .btn-generate {
+        background: #e74c3c;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        font-size: 14px;
+        height: fit-content;
+    }
+
+        .btn-generate:hover {
+            background: #c0392b;
+        }
+
+    .table-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .reporte-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .reporte-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border: none;
+        }
+
+        .reporte-table td {
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            vertical-align: middle;
+        }
+
+        .reporte-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .reporte-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+    .item-number {
+        font-family: monospace;
+        font-weight: bold;
+        color: #667eea;
+        font-size: 14px;
+    }
+
+    .marca-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .marca-icon {
+        width: 35px;
+        height: 35px;
+        background: #f39c12;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .marca-name {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    .cantidad-badge {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .precio-text {
+        color: #27ae60;
+        font-weight: 600;
+        font-size: 16px;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 60px 40px;
+        color: #6c757d;
+    }
+
+        .no-data i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+            color: #667eea;
+        }
+
+        .no-data p {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .no-data small {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+    }
+</style>

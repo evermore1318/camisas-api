@@ -50,7 +50,7 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
 
             if (user == null)
             {
-                ViewBag.Mensaje = "Usuario o clave incorrectos.";
+                ViewBag.Mensaje = "Credenciales inválidas.";
                 return View();
             }
 
