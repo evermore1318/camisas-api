@@ -85,7 +85,6 @@ public class VentasController : Controller
 
     private void CargarListasDesplegables()
     {
-        // Marcas (útil para el modal de búsqueda)
         using (var http = new HttpClient())
         {
             http.BaseAddress = new Uri(_config["Services:URL"]);
@@ -130,7 +129,6 @@ public class VentasController : Controller
 
     #region . ACCIONES MVC .
 
-    // GET: /Ventas/Index
     [HttpGet]
     public IActionResult Index(string? dni, int? id)
     {
@@ -163,7 +161,6 @@ public class VentasController : Controller
                 .ToList();
 
 
-        //agregado para el listado de ventas
         var cache = new Dictionary<int, Camisa>();
         Camisa GetCamisa(int id)
         {
@@ -215,7 +212,6 @@ public class VentasController : Controller
                 }
             }
 
-            // recalcular el total en base a los subtotales
             v.precio_total = v.DetallesTotal.Sum(x => x.Subtotal);
         }
 
@@ -225,7 +221,6 @@ public class VentasController : Controller
         return View(ventas);
     }
 
-    // GET: /Ventas/Create
     [HttpGet]
     public IActionResult Create()
     {
@@ -234,7 +229,6 @@ public class VentasController : Controller
         return View(vm);
     }
 
-    // POST: /Ventas/AgregarVenta (desde el form: action="Agregar")
     [HttpPost]
     public IActionResult AgregarVenta(VentaCreate vm)
     {
@@ -261,7 +255,6 @@ public class VentasController : Controller
             PrecioUnitario = vm.PrecioUnitario > 0 ? vm.PrecioUnitario : camisa.precio_venta
         });
 
-        // Limpiar selección
         vm.CamisaSeleccionadaId = null;
         vm.Cantidad = 1;
         vm.PrecioUnitario = 0;
@@ -270,7 +263,6 @@ public class VentasController : Controller
         return View("Create", vm);
     }
 
-    // POST: /Ventas/QuitarVenta (desde el form: action="Quitar:{idx}")
     [HttpPost]
     public IActionResult QuitarVenta(VentaCreate venta, int idx)
     {
@@ -281,7 +273,6 @@ public class VentasController : Controller
         return View("Create", venta);
     }
 
-    // GET: /Ventas/BuscarCamisas (usado por modal ajax)
     [HttpGet]
     public IActionResult BuscarCamisas([FromQuery] CamisaFiltro filtro)
     {
@@ -289,7 +280,6 @@ public class VentasController : Controller
         return PartialView("BuscarCamisasPartial.cshtml", data);
     }
 
-    // POST: /Ventas/Create  (registrar venta en el back)
     [HttpPost]
     public IActionResult Create(VentaCreate venta, string? action)
     {
@@ -335,7 +325,6 @@ public class VentasController : Controller
         return View(venta);
     }
 
-    // GET: /Ventas/Comprobante
     public IActionResult Comprobante(int? id = null)
     {
         if (id == null) return RedirectToAction(nameof(Index));
@@ -368,7 +357,6 @@ public class VentasController : Controller
     }
 
 
-    //  POST /Ventas/Edit/{id} -> envía solo el estado al API
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Edit(int id, string estado)

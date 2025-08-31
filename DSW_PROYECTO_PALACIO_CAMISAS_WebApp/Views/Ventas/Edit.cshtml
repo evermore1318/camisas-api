@@ -13,13 +13,11 @@
 }
 @section Scripts {
     <script>
-        // Ocultar el alerta en 4s
         setTimeout(()=> document.getElementById('flashMsg')?.remove(), 4000);
     </script>
 }
 
 <div class="content-wrapper">
-    <!-- Header -->
     <div class="page-header">
         <h3><i class="fas fa-edit"></i> @ViewData["Title"]</h3>
         <a asp-action="Index" class="btn-create btn-sm">
@@ -31,7 +29,6 @@
         @Html.AntiForgeryToken()
         <input type="hidden" name="id" value="@Model.id_venta" />
 
-        <!-- Datos de la venta -->
         <div class="card-lite mb-4">
             <div class="card-lite-header">
                 <h5 class="card-lite-title"><i class="fas fa-receipt"></i> Datos de la Venta</h5>
@@ -56,7 +53,6 @@
             </div>
         </div>
 
-        <!-- Estado editable -->
         <div class="card-lite mb-4">
             <div class="card-lite-header">
                 <h5 class="card-lite-title"><i class="fas fa-flag"></i> Cambiar Estado</h5>
@@ -80,7 +76,6 @@
             </div>
         </div>
 
-        <!-- Acciones -->
         <div class="actions-bar">
             <button type="submit" class="btn-primary-solid">
                 <i class="fas fa-save"></i> Guardar
