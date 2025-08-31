@@ -20,79 +20,104 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Controllers
                 marcaDB = marcaRepo;
                 estanteDB = estanteRepo;
             }
-
-            [HttpGet]
-            public async Task<IActionResult> Listar()
+        [HttpGet]
+        public async Task<IActionResult> Listar(
+          [FromQuery] int marcaId = 0,
+          [FromQuery] string tipo = "",
+          [FromQuery] string talla = "",
+          [FromQuery] string manga = "",
+          [FromQuery] string color = "")
+        {
+            try
             {
+                // Obtener todas las camisas (filtrado se hace aquí por simplicidad)
                 var camisas = await Task.Run(() => camisaDB.Listado());
-                var camisasDto = camisas.Select(c => new CamisaDto
-                {
-                    id_camisa = c.id_camisa,
-                    descripcion = c.descripcion,
-                    marca = c.marca_nombre ?? "",
-                    color = c.color,
-                    talla = c.talla,
-                    manga = c.manga,
-                    stock = c.stock,
-                    precio_costo = c.precio_costo,
-                    precio_venta = c.precio_venta,
-                    estante = c.estante_descripcion ?? "",
-                    estado = c.estado,
-                    id_marca = c.id_marca,
-                    id_estante = c.id_estante
-                }).ToList();
 
-                return Ok(camisasDto);
+                // Aplicar filtros si están presentes
+                var camisasFiltradas = camisas.AsQueryable();
+
+                if (marcaId > 0)
+                    camisasFiltradas = camisasFiltradas.Where(c => c.id_marca == marcaId);
+
+                if (!string.IsNullOrEmpty(tipo))
+                    camisasFiltradas = camisasFiltradas.Where(c => c.descripcion.Contains(tipo, StringComparison.OrdinalIgnoreCase));
+
+                if (!string.IsNullOrEmpty(talla))
+                    camisasFiltradas = camisasFiltradas.Where(c => c.talla.Equals(talla, StringComparison.OrdinalIgnoreCase));
+
+                if (!string.IsNullOrEmpty(manga))
+                    camisasFiltradas = camisasFiltradas.Where(c => c.manga.Contains(manga, StringComparison.OrdinalIgnoreCase));
+
+                if (!string.IsNullOrEmpty(color))
+                    camisasFiltradas = camisasFiltradas.Where(c => c.color.Contains(color, StringComparison.OrdinalIgnoreCase));
+
+                // DEVOLVER DIRECTAMENTE LAS CAMISAS, NO DTO
+                return Ok(camisasFiltradas.ToList());
             }
-
-            [HttpGet("{id}")]
-            public async Task<IActionResult> ObtenerPorId(int id)
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> ObtenerPorId(int id)
+        {
+            try
             {
                 var camisa = await Task.Run(() => camisaDB.ObtenerPorID(id));
                 if (camisa == null)
                     return NotFound();
 
-                var camisaDto = new CamisaDto
-                {
-                    id_camisa = camisa.id_camisa,
-                    descripcion = camisa.descripcion,
-                    marca = camisa.marca_nombre ?? "",
-                    color = camisa.color,
-                    talla = camisa.talla,
-                    manga = camisa.manga,
-                    stock = camisa.stock,
-                    precio_costo = camisa.precio_costo,
-                    precio_venta = camisa.precio_venta,
-                    estante = camisa.estante_descripcion ?? "",
-                    estado = camisa.estado,
-                    id_marca = camisa.id_marca,
-                    id_estante = camisa.id_estante
-                };
-
-                return Ok(camisaDto);
+                // DEVOLVER DIRECTAMENTE LA CAMISA, NO DTO
+                return Ok(camisa);
             }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
 
-            [HttpPost]
-            public async Task<IActionResult> Registrar([FromBody] Camisa camisa)
+        [HttpPost]
+        public async Task<IActionResult> Registrar([FromBody] Camisa camisa)
+        {
+            try
             {
                 var nuevaCamisa = await Task.Run(() => camisaDB.Registrar(camisa));
                 return Ok(nuevaCamisa);
             }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
 
-            [HttpPut("{id}")]
-            public async Task<IActionResult> Actualizar(int id, [FromBody] Camisa camisa)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Actualizar(int id, [FromBody] Camisa camisa)
+        {
+            try
             {
                 camisa.id_camisa = id;
                 var camisaActualizada = await Task.Run(() => camisaDB.Actualizar(camisa));
                 return Ok(camisaActualizada);
             }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
 
-            [HttpDelete("{id}")]
-            public async Task<IActionResult> Eliminar(int id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Eliminar(int id)
+        {
+            try
             {
                 var eliminado = await Task.Run(() => camisaDB.Eliminar(id));
                 return Ok(eliminado);
             }
-        
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 }

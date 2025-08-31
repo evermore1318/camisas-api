@@ -86,18 +86,33 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
 
         private void CargarListasDesplegables()
         {
-            // Marcas
-            using (var http = new HttpClient())
+            try
             {
-                http.BaseAddress = new Uri(_config["Services:URL"]);
-                var resp = http.GetAsync("marcas").Result;
-                var data = resp.Content.ReadAsStringAsync().Result;
-                var marcas = string.IsNullOrWhiteSpace(data) ? new List<Marca>() : JsonConvert.DeserializeObject<List<Marca>>(data);
-                // Nota: Ajusta los nombres de propiedades según tu modelo real
-                ViewBag.Marcas = new SelectList(marcas ?? new List<Marca>(), "Id_Marca", "Descripcion");
+                // Inicializar con lista vacía por defecto
+                ViewBag.Marcas = new SelectList(new List<Marca>(), "id_marca", "descripcion");
+
+                // Marcas
+                using (var http = new HttpClient())
+                {
+                    http.BaseAddress = new Uri(_config["Services:URL"]);
+                    var resp = http.GetAsync("marcas").Result;
+
+                    if (resp.IsSuccessStatusCode)
+                    {
+                        var data = resp.Content.ReadAsStringAsync().Result;
+                        var marcas = string.IsNullOrWhiteSpace(data) ? new List<Marca>() : JsonConvert.DeserializeObject<List<Marca>>(data);
+
+                        // CORREGIDO: usar nombres exactos de la API
+                        ViewBag.Marcas = new SelectList(marcas ?? new List<Marca>(), "id_marca", "descripcion");
+                    }
+                }
             }
-            // Si luego expones catálogos de Talla/Tipo/Manga/Color desde tu API,
-            // aquí puedes cargarlos similar a Marcas y enviarlos por ViewBag.*
+            catch (Exception ex)
+            {
+                // Asegurar que siempre haya una lista
+                ViewBag.Marcas = new SelectList(new List<Marca>(), "id_marca", "descripcion");
+                System.Diagnostics.Debug.WriteLine($"Error cargando marcas: {ex.Message}");
+            }
         }
 
         #endregion
@@ -205,15 +220,5 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
         }
 
         #endregion
-    }
-
-    // ---- ViewModel de filtros (ajusta al tuyo real si ya lo tienes en otra ruta) ----
-    public class CamisaFiltro
-    {
-        public int? MarcaId { get; set; }
-        public string? Tipo { get; set; }
-        public string? Talla { get; set; }
-        public string? Manga { get; set; }
-        public string? Color { get; set; }
     }
 }

@@ -61,32 +61,43 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
         private List<Camisa> buscarCamisas(CamisaFiltro filtro)
         {
             var resultado = new List<Camisa>();
-            using (var http = new HttpClient())
+
+            try
             {
-                http.BaseAddress = new Uri(_config["Services:URL"]);
+                using (var http = new HttpClient())
+                {
+                    http.BaseAddress = new Uri(_config["Services:URL"]);
 
-                // Construir query string solo con parámetros que tienen valor
-                var queryParams = new List<string>();
+                    // Construir query string igual que el CamisasController MVC
+                    var qs = $"camisas?marcaId={filtro?.MarcaId ?? 0}&tipo={Uri.EscapeDataString(filtro?.Tipo ?? "")}&talla={Uri.EscapeDataString(filtro?.Talla ?? "")}&manga={Uri.EscapeDataString(filtro?.Manga ?? "")}&color={Uri.EscapeDataString(filtro?.Color ?? "")}";
 
-                if (filtro.MarcaId.HasValue && filtro.MarcaId.Value > 0)
-                    queryParams.Add($"marcaId={filtro.MarcaId.Value}");
-                if (!string.IsNullOrEmpty(filtro.Tipo))
-                    queryParams.Add($"tipo={Uri.EscapeDataString(filtro.Tipo)}");
-                if (!string.IsNullOrEmpty(filtro.Talla))
-                    queryParams.Add($"talla={Uri.EscapeDataString(filtro.Talla)}");
-                if (!string.IsNullOrEmpty(filtro.Manga))
-                    queryParams.Add($"manga={Uri.EscapeDataString(filtro.Manga)}");
-                if (!string.IsNullOrEmpty(filtro.Color))
-                    queryParams.Add($"color={Uri.EscapeDataString(filtro.Color)}");
+                    System.Diagnostics.Debug.WriteLine($"URL completa: {http.BaseAddress}{qs}");
 
-                var qs = queryParams.Any() ? "camisas?" + string.Join("&", queryParams) : "camisas";
+                    var resp = http.GetAsync(qs).Result;
 
-                var resp = http.GetAsync(qs).Result;
-                var data = resp.Content.ReadAsStringAsync().Result;
-                resultado = string.IsNullOrWhiteSpace(data)
-                    ? new List<Camisa>()
-                    : JsonConvert.DeserializeObject<List<Camisa>>(data) ?? new List<Camisa>();
+                    if (resp.IsSuccessStatusCode)
+                    {
+                        var data = resp.Content.ReadAsStringAsync().Result;
+                        System.Diagnostics.Debug.WriteLine($"Datos recibidos: {data.Substring(0, Math.Min(500, data.Length))}...");
+
+                        resultado = string.IsNullOrWhiteSpace(data)
+                            ? new List<Camisa>()
+                            : JsonConvert.DeserializeObject<List<Camisa>>(data) ?? new List<Camisa>();
+
+                        System.Diagnostics.Debug.WriteLine($"Camisas deserializadas: {resultado.Count}");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error HTTP: {resp.StatusCode} - {resp.ReasonPhrase}");
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Excepción en buscarCamisas: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+
             return resultado;
         }
 
@@ -223,8 +234,33 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
         [HttpGet]
         public IActionResult BuscarCamisas([FromQuery] CamisaFiltro filtro)
         {
-            var data = buscarCamisas(filtro ?? new CamisaFiltro());
-            return PartialView("_BuscarCamisasPartial", data);
+            try
+            {
+                System.Diagnostics.Debug.WriteLine("=== INICIO BuscarCamisas ===");
+                System.Diagnostics.Debug.WriteLine($"Filtros - MarcaId: {filtro?.MarcaId}, Tipo: '{filtro?.Tipo}', Talla: '{filtro?.Talla}', Manga: '{filtro?.Manga}', Color: '{filtro?.Color}'");
+
+                var data = buscarCamisas(filtro ?? new CamisaFiltro());
+
+                System.Diagnostics.Debug.WriteLine($"Camisas encontradas: {data.Count}");
+
+                // Log de algunas camisas encontradas para debug
+                foreach (var camisa in data.Take(3))
+                {
+                    System.Diagnostics.Debug.WriteLine($"  - ID: {camisa.id_camisa}, Desc: {camisa.descripcion}, Marca: {camisa.marca_nombre}, Stock: {camisa.stock}");
+                }
+
+                System.Diagnostics.Debug.WriteLine("=== FIN BuscarCamisas ===");
+
+                return PartialView("_BuscarCamisasPartial", data);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ERROR en BuscarCamisas: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+
+                // En caso de error, retornar lista vacía
+                return PartialView("_BuscarCamisasPartial", new List<Camisa>());
+            }
         }
 
         // POST: /Ventas/Create
