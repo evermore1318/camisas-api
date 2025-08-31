@@ -1,280 +1,73 @@
 ﻿@model IEnumerable<DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.Venta>
+
 @{
-    ViewData["Title"] = "Listado de Ventas";
-    var ventasActivas = Model?.Where(v => v.estado == "Activo").Count() ?? 0;
-    var ventasAnuladas = Model?.Where(v => v.estado == "Anulado").Count() ?? 0;
-    var totalVentas = Model?.Sum(v => v.estado == "Activo" ? v.precio_total : 0) ?? 0;
+    ViewData["Title"] = "Ventas con Detalles";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-cash-register me-2"></i>@ViewData["Title"]</h2>
-    <a asp-action="Create" class="btn btn-primary">
-        <i class="fas fa-plus me-1"></i>Nueva Venta
-    </a>
-</div>
+<h2 class="mb-3">Listado de Ventas con Detalles</h2>
 
-@if (TempData["msg"] != null)
+<p>
+    <a asp-action="Create" class="btn btn-primary">Registrar Nueva Venta</a>
+</p>
+
+@foreach (var venta in Model)
 {
-    <div class="alert alert-@(TempData["tipo"] == "success" ? "success" : "danger") alert-dismissible fade show">
-        <i class="fas fa-@(TempData["tipo"] == "success" ? "check-circle" : "exclamation-triangle") me-2"></i>
-        @TempData["msg"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
-
-<!-- Resumen de Estadísticas -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card border-primary">
-            <div class="card-body text-center">
-                <i class="fas fa-shopping-cart fa-2x text-primary mb-2"></i>
-                <h4 class="text-primary">@(Model?.Count() ?? 0)</h4>
-                <p class="mb-0">Total Ventas</p>
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <div class="d-flex justify-content-between">
+                <span>
+                    <strong>Venta N°:</strong> @venta.id_venta  |
+                    <strong>Cliente:</strong> @venta.nombre_cliente  |
+                    <strong>Fecha:</strong> @venta.fecha.ToString("dd/MM/yyyy")
+                </span>
+                <span>
+                    <strong>Total: </strong> S/. @venta.precio_total.ToString("0.00")
+                </span>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-success">
-            <div class="card-body text-center">
-                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                <h4 class="text-success">@ventasActivas</h4>
-                <p class="mb-0">Ventas Activas</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-danger">
-            <div class="card-body text-center">
-                <i class="fas fa-ban fa-2x text-danger mb-2"></i>
-                <h4 class="text-danger">@ventasAnuladas</h4>
-                <p class="mb-0">Ventas Anuladas</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-warning">
-            <div class="card-body text-center">
-                <i class="fas fa-dollar-sign fa-2x text-warning mb-2"></i>
-                <h4 class="text-warning">S/. @totalVentas.ToString("N2")</h4>
-                <p class="mb-0">Total Recaudado</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Listado de Ventas -->
-@if (Model?.Any() == true)
-{
-    @foreach (var venta in Model.OrderByDescending(v => v.fecha))
-    {
-        <div class="card mb-3 @(venta.estado == "Anulado" ? "border-danger" : "border-success")">
-            <div class="card-header @(venta.estado == "Anulado" ? "bg-danger" : "bg-success") text-white">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h5 class="mb-0">
-                            <i class="fas fa-receipt me-2"></i>
-                            Venta N° @venta.id_venta
-                            <span class="badge bg-light text-dark ms-2">@venta.estado</span>
-                        </h5>
-                        <div class="mt-1">
-                            <strong>Cliente:</strong> @venta.nombre_cliente (@venta.dni_cliente) |
-                            <strong>Fecha:</strong> @venta.fecha.ToString("dd/MM/yyyy HH:mm") |
-                            <strong>Pago:</strong> @venta.tipo_pago
-                        </div>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <div class="h4 mb-0">
-                            @if (venta.estado == "Anulado")
-                            {
-                                <span class="text-decoration-line-through">S/. @venta.precio_total.ToString("N2")</span>
-                                <br>
-
-                                <small>ANULADA</small>
-                            }
-                            else
-                            {
-                                <span>S/. @venta.precio_total.ToString("N2")</span>
-                            }
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card-body p-0">
-                @if (venta.detalles?.Any() == true)
-                {
-                    <div class="table-responsive">
-                        <table class="table table-sm mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th width="5%">#</th>
-                                    <th width="25%">Producto</th>
-                                    <th width="15%">Marca</th>
-                                    <th width="10%">Color</th>
-                                    <th width="8%">Talla</th>
-                                    <th width="10%">Manga</th>
-                                    <th width="8%" class="text-center">Cant.</th>
-                                    <th width="10%" class="text-end">P.Unit</th>
-                                    <th width="9%" class="text-end">Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @{
-                                    int contador = 1;
-                                }
-                                @foreach (var detalle in venta.detalles)
-                                {
-                                    <tr class="@(venta.estado == "Anulado" ? "text-muted" : "")">
-                                        <td>@contador</td>
-                                        <td>
-                                            <strong>@(detalle.camisa_descripcion ?? "N/A")</strong>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info text-dark">@(detalle.marca_nombre ?? "N/A")</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-secondary">@(detalle.camisa_color ?? "N/A")</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-outline-secondary">@(detalle.camisa_talla ?? "N/A")</span>
-                                        </td>
-                                        <td>@(detalle.camisa_manga ?? "N/A")</td>
-                                        <td class="text-center">
-                                            <span class="badge bg-primary">@detalle.cantidad</span>
-                                        </td>
-                                        <td class="text-end">S/. @detalle.precio.ToString("N2")</td>
-                                        <td class="text-end">
-                                            <strong>S/. @((detalle.cantidad * detalle.precio).ToString("N2"))</strong>
-                                        </td>
-                                    </tr>
-                                    contador++;
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <div class="text-center py-3 text-muted">
-                        <i class="fas fa-box-open fa-2x mb-2"></i>
-                        <p>No hay productos registrados en esta venta</p>
-                    </div>
-                }
-            </div>
-
-            <div class="card-footer bg-light">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-muted">
-                            <i class="fas fa-box me-1"></i>
-                            @(venta.detalles?.Count ?? 0) productos |
-                            <i class="fas fa-calendar me-1"></i>
-                            @venta.fecha.ToString("dd/MM/yyyy HH:mm")
-                        </small>
-                    </div>
-                    <div class="btn-group">
-                        <a asp-action="Details" asp-route-id="@venta.id_venta"
-                           class="btn btn-info btn-sm" title="Ver detalles">
-                            <i class="fas fa-eye"></i>
-                        </a>
-
-                        @if (venta.estado != "Anulado")
+        <div class="card-body p-0">
+            <table class="table table-bordered m-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Camisa</th>
+                        <th>Presentación (Color/Talla/Manga)</th>
+                        <th class="text-end">Cantidad</th>
+                        <th class="text-end">Precio Unitario</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (venta.DetallesTotal != null && venta.DetallesTotal.Any())
+                    {
+                        foreach (var det in venta.DetallesTotal)
                         {
-                            <a asp-action="Comprobante" asp-route-id="@venta.id_venta"
-                               class="btn btn-success btn-sm" title="Ver comprobante">
-                                <i class="fas fa-print"></i>
-                            </a>
-
-                            <button type="button"
-                                    class="btn btn-danger btn-sm"
-                                    title="Anular venta"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#anularModal-@venta.id_venta">
-                                <i class="fas fa-ban"></i>
-                            </button>
+                            <tr>
+                                <td>@det.Descripcion</td>
+                                <td>@det.Presentacion</td>
+                                <td class="text-end">@det.Cantidad</td>
+                                <td class="text-end">S/. @det.PrecioUnitario.ToString("0.00")</td>
+                                <td class="text-end">S/. @det.Subtotal.ToString("0.00")</td>
+                            </tr>
                         }
-                        else
+                    }
+                    else if (venta.detalles != null && venta.detalles.Any())
+                    {
+                        foreach (var det in venta.detalles)
                         {
-                            <span class="badge bg-danger">ANULADA</span>
+                            <tr>
+                                <td>Camisa #@det.Id_Camisa</td>
+                                <td>-</td>
+                                <td class="text-end">@det.Cantidad</td>
+                                <td class="text-end">S/. @det.Precio.ToString("0.00")</td>
+                                <td class="text-end">S/. @(det.Cantidad * det.Precio)</td>
+                            </tr>
                         }
-                    </div>
-                </div>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
-
-        <!-- Modal de Confirmación para Anular (uno por cada venta) -->
-        @if (venta.estado != "Anulado")
-        {
-            <div class="modal fade" id="anularModal-@venta.id_venta" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header bg-danger text-white">
-                            <h5 class="modal-title">
-                                <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Anulación
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="text-center">
-                                <i class="fas fa-ban fa-3x text-danger mb-3"></i>
-                                <h5>¿Está seguro que desea anular esta venta?</h5>
-                                <p class="text-muted">Esta acción no se puede revertir.</p>
-                                <div class="alert alert-warning">
-                                    <strong>Venta N°:</strong> @venta.id_venta<br>
-                                    <strong>Cliente:</strong> @venta.nombre_cliente<br>
-                                    <strong>Total:</strong> S/. @venta.precio_total.ToString("N2")<br>
-                                    <strong>Productos:</strong> @(venta.detalles?.Count ?? 0)
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="fas fa-times me-1"></i>Cancelar
-                            </button>
-                            <form asp-action="Anular" asp-route-id="@venta.id_venta" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-danger">
-                                    <i class="fas fa-ban me-1"></i>Sí, Anular
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-    }
-}
-else
-{
-    <!-- Estado Vacío -->
-    <div class="card">
-        <div class="card-body text-center py-5">
-            <i class="fas fa-cash-register fa-4x text-muted mb-3"></i>
-            <h3 class="text-muted">No hay ventas registradas</h3>
-            <p class="text-muted mb-4">
-                Comience registrando su primera venta haciendo clic en el botón de abajo.
-            </p>
-            <a asp-action="Create" class="btn btn-primary btn-lg">
-                <i class="fas fa-plus me-2"></i>Registrar Primera Venta
-            </a>
+        <div class="card-footer text-end">
+            <a asp-action="Edit" asp-route-id="@venta.id_venta" class="btn btn-warning btn-sm">Editar</a>
         </div>
     </div>
-}
-
-@section Scripts {
-    <script>
-        // Auto-ocultar alertas después de 5 segundos
-        setTimeout(function() {
-            $('.alert').fadeOut('slow');
-        }, 5000);
-
-        // Confirmación adicional antes de anular
-        document.querySelectorAll('form[action*="Anular"]').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                const ventaId = this.action.split('/').pop();
-                if (!confirm(`¿Está completamente seguro de anular la venta N° ${ventaId}?`)) {
-                    e.preventDefault();
-                }
-            });
-        });
-    </script>
 }

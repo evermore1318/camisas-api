@@ -9,17 +9,17 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Controllers
     [ApiController]
     public class CamisasController : ControllerBase
     {
-       
-            private readonly ICamisa camisaDB;
-            private readonly IMarca marcaDB;
-            private readonly IEstante estanteDB;
 
-            public CamisasController(ICamisa camisaRepo, IMarca marcaRepo, IEstante estanteRepo)
-            {
-                camisaDB = camisaRepo;
-                marcaDB = marcaRepo;
-                estanteDB = estanteRepo;
-            }
+        private readonly ICamisa camisaDB;
+        private readonly IMarca marcaDB;
+        private readonly IEstante estanteDB;
+
+        public CamisasController(ICamisa camisaRepo, IMarca marcaRepo, IEstante estanteRepo)
+        {
+            camisaDB = camisaRepo;
+            marcaDB = marcaRepo;
+            estanteDB = estanteRepo;
+        }
         [HttpGet]
         public async Task<IActionResult> Listar(
           [FromQuery] int marcaId = 0,

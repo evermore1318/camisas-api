@@ -1,21 +1,37 @@
-﻿@model IEnumerable<Camisa>
-<table class="table table-hover">
+﻿@model IEnumerable<DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.Camisa>
+
+<table class="table table-sm table-hover">
     <thead>
-        <tr><th>ID</th><th>Descripción</th><th>Marca</th><th>Color</th><th>Talla</th><th>Manga</th><th>PV</th><th>Stock</th><th></th></tr>
+        <tr>
+            <th>ID</th>
+            <th>Marca</th>
+            <th>Descripción</th>
+            <th>Color</th>
+            <th>Manga</th>
+            <th>Talla</th>
+            <th class="text-end">Precio</th>
+            <th class="text-end">Stock</th>
+            <th></th>
+        </tr>
     </thead>
     <tbody>
         @foreach (var c in Model)
         {
             <tr>
                 <td>@c.id_camisa</td>
-                <td>@c.descripcion</td>
                 <td>@c.marca_nombre</td>
+                <td>@c.descripcion</td>
                 <td>@c.color</td>
-                <td>@c.talla</td>
                 <td>@c.manga</td>
-                <td>@c.precio_venta.ToString("0.00")</td>
-                <td>@c.stock</td>
-                <td class="text-end"><button type="button" class="btn btn-sm btn-outline-success" onclick="seleccionarCamisa(@c.id_camisa)">Elegir</button></td>
+                <td>@c.talla</td>
+                <td class="text-end">@c.precio_venta.ToString("0.00")</td>
+                <td class="text-end">@c.stock</td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-primary"
+                            data-select-camisa data-id="@c.id_camisa">
+                        Seleccionar
+                    </button>
+                </td>
             </tr>
         }
     </tbody>

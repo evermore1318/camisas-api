@@ -16,15 +16,28 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
 
         #region . MÉTODOS PRIVADOS (HTTP HELPERS) .
 
+        //sirve para armar la query solo con filtros presentes
+        private static string CrearQuery(string path, CamisaFiltro filtro)
+        {
+            var parts = new List<string>();
+            if (filtro != null)
+            {
+                if (filtro.MarcaId.HasValue) parts.Add($"marcaId={filtro.MarcaId.Value}");
+                if (!string.IsNullOrWhiteSpace(filtro.Tipo)) parts.Add($"tipo={Uri.EscapeDataString(filtro.Tipo)}");
+                if (!string.IsNullOrWhiteSpace(filtro.Talla)) parts.Add($"talla={Uri.EscapeDataString(filtro.Talla)}");
+                if (!string.IsNullOrWhiteSpace(filtro.Manga)) parts.Add($"manga={Uri.EscapeDataString(filtro.Manga)}");
+                if (!string.IsNullOrWhiteSpace(filtro.Color)) parts.Add($"color={Uri.EscapeDataString(filtro.Color)}");
+            }
+            return parts.Count == 0 ? path : $"{path}?{string.Join("&", parts)}";
+        }
         private List<Camisa> obtenerCamisas(CamisaFiltro filtro)
         {
             var listado = new List<Camisa>();
             using (var http = new HttpClient())
             {
                 http.BaseAddress = new Uri(_config["Services:URL"]);
-                // Construir query preservando nulos/vacíos
-                var qs = $"camisas?marcaId={(filtro.MarcaId ?? 0)}&tipo={filtro.Tipo ?? ""}&talla={filtro.Talla ?? ""}&manga={filtro.Manga ?? ""}&color={filtro.Color ?? ""}";
-                var resp = http.GetAsync(qs).Result;
+                // se modifica : usar crearquery en lugar del QS fijo con marcaId=0
+                var resp = http.GetAsync(CrearQuery("camisas", filtro)).Result;
                 var data = resp.Content.ReadAsStringAsync().Result;
                 listado = string.IsNullOrWhiteSpace(data)
                     ? new List<Camisa>()
@@ -86,33 +99,17 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
 
         private void CargarListasDesplegables()
         {
-            try
+            // Marcas
+            using (var http = new HttpClient())
             {
-                // Inicializar con lista vacía por defecto
-                ViewBag.Marcas = new SelectList(new List<Marca>(), "id_marca", "descripcion");
-
-                // Marcas
-                using (var http = new HttpClient())
-                {
-                    http.BaseAddress = new Uri(_config["Services:URL"]);
-                    var resp = http.GetAsync("marcas").Result;
-
-                    if (resp.IsSuccessStatusCode)
-                    {
-                        var data = resp.Content.ReadAsStringAsync().Result;
-                        var marcas = string.IsNullOrWhiteSpace(data) ? new List<Marca>() : JsonConvert.DeserializeObject<List<Marca>>(data);
-
-                        // CORREGIDO: usar nombres exactos de la API
-                        ViewBag.Marcas = new SelectList(marcas ?? new List<Marca>(), "id_marca", "descripcion");
-                    }
-                }
+                http.BaseAddress = new Uri(_config["Services:URL"]);
+                var resp = http.GetAsync("marcas").Result;
+                var data = resp.Content.ReadAsStringAsync().Result;
+                var marcas = string.IsNullOrWhiteSpace(data) ? new List<Marca>() : JsonConvert.DeserializeObject<List<Marca>>(data);
+                ViewBag.Marcas = new SelectList(marcas ?? new List<Marca>(), "id_marca", "descripcion");
             }
-            catch (Exception ex)
-            {
-                // Asegurar que siempre haya una lista
-                ViewBag.Marcas = new SelectList(new List<Marca>(), "id_marca", "descripcion");
-                System.Diagnostics.Debug.WriteLine($"Error cargando marcas: {ex.Message}");
-            }
+            // Si luego expones catálogos de Talla/Tipo/Manga/Color desde tu API,
+            // aquí puedes cargarlos similar a Marcas y enviarlos por ViewBag.*
         }
 
         #endregion
@@ -219,6 +216,23 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
             return RedirectToAction("Index");
         }
 
+        // GET: /Camisas/Buscar?marcaId=&tipo=&talla=&manga=&color
+        [HttpGet]
+        public IActionResult Buscar([FromQuery] CamisaFiltro filtro)
+        {
+            var data = obtenerCamisas(filtro);
+            return PartialView("BuscarCamisasPartial", data);
+        }
         #endregion
+    }
+
+    // ---- ViewModel de filtros (ajusta al tuyo real si ya lo tienes en otra ruta) ----
+    public class CamisaFiltro
+    {
+        public int? MarcaId { get; set; }
+        public string? Tipo { get; set; }
+        public string? Talla { get; set; }
+        public string? Manga { get; set; }
+        public string? Color { get; set; }
     }
 }

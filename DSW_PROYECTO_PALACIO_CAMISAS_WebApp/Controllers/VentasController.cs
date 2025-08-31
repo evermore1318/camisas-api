@@ -1,354 +1,367 @@
 ﻿using DSW_PROYECTO_PALACIO_CAMISAS_WebApp.ViewModels;
-using DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.DTOs;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models;
 
-namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
+public class VentasController : Controller
 {
-    public class VentasController : Controller
+    private readonly IConfiguration _config;
+    public VentasController(IConfiguration config)
     {
-        private readonly IConfiguration _config;
-        public VentasController(IConfiguration config)
+        _config = config;
+    }
+
+    #region . MÉTODOS PRIVADOS (HTTP HELPERS) .
+
+    private List<Venta> obtenerVentas()
+    {
+        var listado = new List<Venta>();
+        using (var http = new HttpClient())
         {
-            _config = config;
+            http.BaseAddress = new Uri(_config["Services:URL"]);
+            var resp = http.GetAsync("ventas").Result;
+            var data = resp.Content.ReadAsStringAsync().Result;
+            listado = string.IsNullOrWhiteSpace(data)
+                ? new List<Venta>()
+                : JsonConvert.DeserializeObject<List<Venta>>(data) ?? new List<Venta>();
         }
+        return listado;
+    }
 
-        #region . MÉTODOS PRIVADOS (HTTP HELPERS) .
-
-        private List<Venta> obtenerVentas()
+    private Camisa obtenerCamisaPorId(int id)
+    {
+        Camisa camisa = null;
+        using (var http = new HttpClient())
         {
-            var listado = new List<Venta>();
-            using (var http = new HttpClient())
+            http.BaseAddress = new Uri(_config["Services:URL"]);
+            var resp = http.GetAsync($"camisas/{id}").Result;
+            var data = resp.Content.ReadAsStringAsync().Result;
+            camisa = string.IsNullOrWhiteSpace(data) ? null : JsonConvert.DeserializeObject<Camisa>(data);
+        }
+        return camisa;
+    }
+
+    private List<Camisa> buscarCamisas(CamisaFiltro filtro)
+    {
+        var resultado = new List<Camisa>();
+        using (var http = new HttpClient())
+        {
+            http.BaseAddress = new Uri(_config["Services:URL"]);
+            var parts = new List<string>();
+            if (filtro != null)
             {
-                http.BaseAddress = new Uri(_config["Services:URL"]);
-                var resp = http.GetAsync("ventas").Result;
-                var data = resp.Content.ReadAsStringAsync().Result;
-                listado = string.IsNullOrWhiteSpace(data)
-                    ? new List<Venta>()
-                    : JsonConvert.DeserializeObject<List<Venta>>(data) ?? new List<Venta>();
+                if (filtro.MarcaId.HasValue) parts.Add($"marcaId={filtro.MarcaId.Value}");
+                if (!string.IsNullOrWhiteSpace(filtro.Tipo)) parts.Add($"tipo={Uri.EscapeDataString(filtro.Tipo)}");
+                if (!string.IsNullOrWhiteSpace(filtro.Talla)) parts.Add($"talla={Uri.EscapeDataString(filtro.Talla)}");
+                if (!string.IsNullOrWhiteSpace(filtro.Manga)) parts.Add($"manga={Uri.EscapeDataString(filtro.Manga)}");
+                if (!string.IsNullOrWhiteSpace(filtro.Color)) parts.Add($"color={Uri.EscapeDataString(filtro.Color)}");
             }
-            return listado;
+            var url = "camisas" + (parts.Count > 0 ? "?" + string.Join("&", parts) : "");
+            var resp = http.GetAsync(url).Result;
+            var data = resp.Content.ReadAsStringAsync().Result;
+            resultado = string.IsNullOrWhiteSpace(data)
+                ? new List<Camisa>()
+                : JsonConvert.DeserializeObject<List<Camisa>>(data) ?? new List<Camisa>();
         }
+        return resultado;
+    }
 
-        private Venta obtenerVentaPorId(int id)
+    private Venta registrarVenta(Venta venta)
+    {
+        Venta creada = null;
+        using (var http = new HttpClient())
         {
-            Venta venta = null;
-            using (var http = new HttpClient())
-            {
-                http.BaseAddress = new Uri(_config["Services:URL"]);
-                var resp = http.GetAsync($"ventas/{id}").Result;
-                var data = resp.Content.ReadAsStringAsync().Result;
-                venta = string.IsNullOrWhiteSpace(data) ? null : JsonConvert.DeserializeObject<Venta>(data);
-            }
-            return venta;
+            http.BaseAddress = new Uri(_config["Services:URL"]);
+            var contenido = new StringContent(JsonConvert.SerializeObject(venta), System.Text.Encoding.UTF8, "application/json");
+            var resp = http.PostAsync("ventas", contenido).Result;
+            var data = resp.Content.ReadAsStringAsync().Result;
+            creada = string.IsNullOrWhiteSpace(data) ? null : JsonConvert.DeserializeObject<Venta>(data);
         }
+        return creada;
+    }
 
-        private Camisa obtenerCamisaPorId(int id)
+    private void CargarListasDesplegables()
+    {
+        // Marcas (útil para el modal de búsqueda)
+        using (var http = new HttpClient())
         {
-            Camisa camisa = null;
-            using (var http = new HttpClient())
-            {
-                http.BaseAddress = new Uri(_config["Services:URL"]);
-                var resp = http.GetAsync($"camisas/{id}").Result;
-                var data = resp.Content.ReadAsStringAsync().Result;
-                camisa = string.IsNullOrWhiteSpace(data) ? null : JsonConvert.DeserializeObject<Camisa>(data);
-            }
-            return camisa;
+            http.BaseAddress = new Uri(_config["Services:URL"]);
+            var resp = http.GetAsync("marcas").Result;
+            var data = resp.Content.ReadAsStringAsync().Result;
+            var marcas = string.IsNullOrWhiteSpace(data) ? new List<Marca>() : JsonConvert.DeserializeObject<List<Marca>>(data);
+            ViewBag.Marcas = new SelectList(marcas ?? new List<Marca>(), "id_marca", "descripcion");
         }
-
-        private List<Camisa> buscarCamisas(CamisaFiltro filtro)
+    }
+    private bool actualizarEstadoVenta(int id, string nuevoEstado)
+    {
+        using (var http = new HttpClient())
         {
-            var resultado = new List<Camisa>();
+            http.BaseAddress = new Uri(_config["Services:URL"]);
+            var payload = new { estado = nuevoEstado }; // solo mandamos estado
+            var content = new StringContent(
+                JsonConvert.SerializeObject(payload),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            var resp = http.PutAsync($"api/ventas/{id}", content).Result;
+            return resp.IsSuccessStatusCode;
+        }
+    }
+    #endregion
 
-            try
-            {
-                using (var http = new HttpClient())
+    #region . ACCIONES MVC .
+
+    // GET: /Ventas/Index
+    [HttpGet]
+    public IActionResult Index()
+    {
+        var ventas = obtenerVentas();
+
+        // Si tu API aún no expone /ventas, puedes dejar un mock temporal:
+        if (ventas == null || ventas.Count == 0)
+        {
+            ventas = new List<Venta>
                 {
-                    http.BaseAddress = new Uri(_config["Services:URL"]);
-
-                    // Construir query string igual que el CamisasController MVC
-                    var qs = $"camisas?marcaId={filtro?.MarcaId ?? 0}&tipo={Uri.EscapeDataString(filtro?.Tipo ?? "")}&talla={Uri.EscapeDataString(filtro?.Talla ?? "")}&manga={Uri.EscapeDataString(filtro?.Manga ?? "")}&color={Uri.EscapeDataString(filtro?.Color ?? "")}";
-
-                    System.Diagnostics.Debug.WriteLine($"URL completa: {http.BaseAddress}{qs}");
-
-                    var resp = http.GetAsync(qs).Result;
-
-                    if (resp.IsSuccessStatusCode)
+                    new Venta
                     {
-                        var data = resp.Content.ReadAsStringAsync().Result;
-                        System.Diagnostics.Debug.WriteLine($"Datos recibidos: {data.Substring(0, Math.Min(500, data.Length))}...");
-
-                        resultado = string.IsNullOrWhiteSpace(data)
-                            ? new List<Camisa>()
-                            : JsonConvert.DeserializeObject<List<Camisa>>(data) ?? new List<Camisa>();
-
-                        System.Diagnostics.Debug.WriteLine($"Camisas deserializadas: {resultado.Count}");
-                    }
-                    else
+                        id_venta = 1,
+                        nombre_cliente = "Juan Pérez",
+                        dni_cliente = "12345678",
+                        tipo_pago = "Efectivo",
+                        fecha = DateTime.Now,
+                        detalles = new List<DetalleVenta>
+                        {
+                            new DetalleVenta{ Id_Camisa = 1, Cantidad = 2, Precio = 50 },
+                            new DetalleVenta{ Id_Camisa = 2, Cantidad = 1, Precio = 70 }
+                        }
+                    },
+                    new Venta
                     {
-                        System.Diagnostics.Debug.WriteLine($"Error HTTP: {resp.StatusCode} - {resp.ReasonPhrase}");
+                        id_venta = 2,
+                        nombre_cliente = "María Gómez",
+                        dni_cliente = "87654321",
+                        tipo_pago = "Tarjeta",
+                        fecha = DateTime.Now.AddDays(-1),
+                        detalles = new List<DetalleVenta>
+                        {
+                            new DetalleVenta{ Id_Camisa = 3, Cantidad = 3, Precio = 45 }
+                        }
                     }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Excepción en buscarCamisas: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-            }
-
-            return resultado;
+                };
         }
 
-        private Venta registrarVenta(VentaCreateDto ventaDto)
+        //agregado para el listado de ventas
+        var cache = new Dictionary<int, Camisa>();
+        Camisa GetCamisa(int id)
         {
-            Venta creada = null;
-            using (var http = new HttpClient())
+            if (!cache.TryGetValue(id, out var c))
             {
-                http.BaseAddress = new Uri(_config["Services:URL"]);
-                var contenido = new StringContent(JsonConvert.SerializeObject(ventaDto), System.Text.Encoding.UTF8, "application/json");
-                var resp = http.PostAsync("ventas", contenido).Result;
-                var data = resp.Content.ReadAsStringAsync().Result;
-                creada = string.IsNullOrWhiteSpace(data) ? null : JsonConvert.DeserializeObject<Venta>(data);
+                c = obtenerCamisaPorId(id) ?? new Camisa { id_camisa = id, descripcion = "(no encontrada)" };
+                cache[id] = c;
             }
-            return creada;
+            return c;
         }
 
-        private bool anularVenta(int id)
+        var lineasPorVenta = new Dictionary<int, List<DetalleVentaTotal>>();
+        foreach (var v in ventas)
         {
-            using (var http = new HttpClient())
+            var lineas = new List<DetalleVentaTotal>();
+            foreach (var d in v.detalles ?? new List<DetalleVenta>())
             {
-                http.BaseAddress = new Uri(_config["Services:URL"]);
-                var updateDto = new { estado = "Anulado" };
-                var contenido = new StringContent(JsonConvert.SerializeObject(updateDto), System.Text.Encoding.UTF8, "application/json");
-                var resp = http.PutAsync($"ventas/{id}", contenido).Result;
-                return resp.IsSuccessStatusCode;
-            }
-        }
-
-        private void CargarListasDesplegables()
-        {
-            using (var http = new HttpClient())
-            {
-                http.BaseAddress = new Uri(_config["Services:URL"]);
-                var resp = http.GetAsync("marcas").Result;
-                var data = resp.Content.ReadAsStringAsync().Result;
-                var marcas = string.IsNullOrWhiteSpace(data) ? new List<Marca>() : JsonConvert.DeserializeObject<List<Marca>>(data);
-                ViewBag.Marcas = new SelectList(marcas ?? new List<Marca>(), "id_marca", "descripcion");
-            }
-        }
-
-        #endregion
-
-        #region . ACCIONES MVC .
-
-        // GET: /Ventas/Index
-        [HttpGet]
-        public IActionResult Index()
-        {
-            var ventas = obtenerVentas();
-            return View(ventas);
-        }
-
-        // GET: /Ventas/Details/5
-        public IActionResult Details(int id)
-        {
-            var venta = obtenerVentaPorId(id);
-            if (venta == null)
-                return NotFound();
-            return View(venta);
-        }
-
-        // GET: /Ventas/Create
-        [HttpGet]
-        public IActionResult Create()
-        {
-            CargarListasDesplegables();
-            var vm = new VentaCreate();
-            return View(vm);
-        }
-
-        // POST: /Ventas/AgregarVenta
-        [HttpPost]
-        public IActionResult AgregarVenta(VentaCreate vm)
-        {
-            if (!vm.CamisaSeleccionadaId.HasValue)
-            {
-                ModelState.AddModelError("", "Seleccione una camisa");
-                CargarListasDesplegables();
-                return View("Create", vm);
-            }
-
-            var camisa = obtenerCamisaPorId(vm.CamisaSeleccionadaId.Value);
-            if (camisa == null)
-            {
-                ModelState.AddModelError("", "Camisa no encontrada");
-                CargarListasDesplegables();
-                return View("Create", vm);
-            }
-
-            // Verificar si ya existe la camisa en las líneas
-            var lineaExistente = vm.Lineas.FirstOrDefault(l => l.Id_Camisa == camisa.id_camisa);
-            if (lineaExistente != null)
-            {
-                // Actualizar cantidad existente
-                lineaExistente.Cantidad += vm.Cantidad;
-                if (vm.PrecioUnitario > 0)
-                    lineaExistente.PrecioUnitario = vm.PrecioUnitario;
-            }
-            else
-            {
-                // Agregar nueva línea
-                vm.Lineas.Add(new DetalleVentaTotal
+                var c = GetCamisa(d.Id_Camisa);
+                lineas.Add(new DetalleVentaTotal
                 {
-                    Id_Camisa = camisa.id_camisa,
-                    Descripcion = camisa.descripcion,
-                    Presentacion = $"{camisa.marca_nombre} - {camisa.color} - {camisa.talla} - {camisa.manga}",
-                    Cantidad = vm.Cantidad,
-                    PrecioUnitario = vm.PrecioUnitario > 0 ? vm.PrecioUnitario : camisa.precio_venta
+                    Id_Camisa = c.id_camisa,
+                    Descripcion = c.descripcion,
+                    Presentacion = $"{c.color} / {c.talla} / {c.manga}",
+                    Cantidad = d.Cantidad,
+                    PrecioUnitario = d.Precio
                 });
             }
+            lineasPorVenta[v.id_venta] = lineas;
+        }
+        ViewBag.LineasPorVenta = lineasPorVenta; // para listar boletas eb vista venta
 
-            // Limpiar selección
-            vm.CamisaSeleccionadaId = null;
-            vm.Cantidad = 1;
-            vm.PrecioUnitario = 0;
+        foreach (var v in ventas) //para poblar correctamente todos los detalles
+        {
+            v.DetallesTotal = new List<DetalleVentaTotal>();
 
+            foreach (var d in v.detalles)
+            {
+                var camisa = obtenerCamisaPorId(d.Id_Camisa);
+                if (camisa != null)
+                {
+                    v.DetallesTotal.Add(new DetalleVentaTotal
+                    {
+                        Id_Camisa = camisa.id_camisa,
+                        Descripcion = camisa.descripcion,
+                        Presentacion = $"{camisa.color} / {camisa.talla} / {camisa.manga}",
+                        Cantidad = d.Cantidad,
+                        PrecioUnitario = d.Precio
+                    });
+                }
+            }
+
+            // recalcular el total en base a los subtotales
+            v.precio_total = v.DetallesTotal.Sum(x => x.Subtotal);
+        }
+
+        return View(ventas);
+    }
+
+    // GET: /Ventas/Create
+    [HttpGet]
+    public IActionResult Create()
+    {
+        CargarListasDesplegables();
+        var vm = new VentaCreate();
+        return View(vm);
+    }
+
+    // POST: /Ventas/AgregarVenta (desde el form: action="Agregar")
+    [HttpPost]
+    public IActionResult AgregarVenta(VentaCreate vm)
+    {
+        if (vm.CamisaSeleccionadaId is null)
+        {
             CargarListasDesplegables();
             return View("Create", vm);
         }
 
-        // POST: /Ventas/QuitarVenta
-        [HttpPost]
-        public IActionResult QuitarVenta(VentaCreate venta, int idx)
+        var camisa = obtenerCamisaPorId(vm.CamisaSeleccionadaId.Value);
+        if (camisa == null)
         {
-            if (idx >= 0 && idx < venta.Lineas.Count)
-                venta.Lineas.RemoveAt(idx);
-
+            ModelState.AddModelError("", "Camisa no encontrada");
             CargarListasDesplegables();
-            return View("Create", venta);
+            return View("Create", vm);
         }
 
-        // GET: /Ventas/BuscarCamisas
-        [HttpGet]
-        public IActionResult BuscarCamisas([FromQuery] CamisaFiltro filtro)
+        vm.Lineas.Add(new DetalleVentaTotal
         {
-            try
-            {
-                System.Diagnostics.Debug.WriteLine("=== INICIO BuscarCamisas ===");
-                System.Diagnostics.Debug.WriteLine($"Filtros - MarcaId: {filtro?.MarcaId}, Tipo: '{filtro?.Tipo}', Talla: '{filtro?.Talla}', Manga: '{filtro?.Manga}', Color: '{filtro?.Color}'");
+            Id_Camisa = camisa.id_camisa,
+            Descripcion = camisa.descripcion,
+            Presentacion = $"{camisa.color} / {camisa.talla} / {camisa.manga}",
+            Cantidad = vm.Cantidad,
+            PrecioUnitario = vm.PrecioUnitario > 0 ? vm.PrecioUnitario : camisa.precio_venta
+        });
 
-                var data = buscarCamisas(filtro ?? new CamisaFiltro());
+        // Limpiar selección
+        vm.CamisaSeleccionadaId = null;
+        vm.Cantidad = 1;
+        vm.PrecioUnitario = 0;
 
-                System.Diagnostics.Debug.WriteLine($"Camisas encontradas: {data.Count}");
-
-                // Log de algunas camisas encontradas para debug
-                foreach (var camisa in data.Take(3))
-                {
-                    System.Diagnostics.Debug.WriteLine($"  - ID: {camisa.id_camisa}, Desc: {camisa.descripcion}, Marca: {camisa.marca_nombre}, Stock: {camisa.stock}");
-                }
-
-                System.Diagnostics.Debug.WriteLine("=== FIN BuscarCamisas ===");
-
-                return PartialView("_BuscarCamisasPartial", data);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"ERROR en BuscarCamisas: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-
-                // En caso de error, retornar lista vacía
-                return PartialView("_BuscarCamisasPartial", new List<Camisa>());
-            }
-        }
-
-        // POST: /Ventas/Create
-        [HttpPost]
-        public IActionResult Create(VentaCreate venta, string? action)
-        {
-            // Manejo de acciones del formulario
-            if (action == "Agregar")
-                return AgregarVenta(venta);
-
-            if (action?.StartsWith("Quitar:") == true)
-            {
-                var idxStr = action.Split(':')[1];
-                if (int.TryParse(idxStr, out var idx))
-                    return QuitarVenta(venta, idx);
-            }
-
-            // Validación antes de registrar
-            if (!venta.Lineas.Any())
-            {
-                ModelState.AddModelError("", "Agrega al menos una camisa.");
-                CargarListasDesplegables();
-                return View(venta);
-            }
-
-            if (string.IsNullOrWhiteSpace(venta.Nombre_Cliente) || string.IsNullOrWhiteSpace(venta.Dni_Cliente))
-            {
-                ModelState.AddModelError("", "Complete los datos del cliente.");
-                CargarListasDesplegables();
-                return View(venta);
-            }
-
-            // Crear DTO para enviar al API
-            var ventaDto = new VentaCreateDto
-            {
-                nombre_cliente = venta.Nombre_Cliente,
-                dni_cliente = venta.Dni_Cliente,
-                tipo_pago = venta.Tipo_Pago,
-                detalles = venta.Lineas.Select(l => new DetalleVentaCreateDto
-                {
-                    id_camisa = l.Id_Camisa,
-                    cantidad = l.Cantidad,
-                    precio = l.PrecioUnitario
-                }).ToList()
-            };
-
-            var creada = registrarVenta(ventaDto);
-            if (creada != null)
-            {
-                TempData["msg"] = "Venta registrada satisfactoriamente.";
-                TempData["tipo"] = "success";
-                return RedirectToAction(nameof(Comprobante), new { id = creada.id_venta });
-            }
-
-            ModelState.AddModelError("", "No se pudo registrar la venta.");
-            CargarListasDesplegables();
-            return View(venta);
-        }
-
-        // POST: /Ventas/Anular/5
-        [HttpPost]
-        public IActionResult Anular(int id)
-        {
-            var exito = anularVenta(id);
-            if (exito)
-            {
-                TempData["msg"] = "Venta anulada correctamente.";
-                TempData["tipo"] = "success";
-            }
-            else
-            {
-                TempData["msg"] = "No se pudo anular la venta.";
-                TempData["tipo"] = "error";
-            }
-
-            return RedirectToAction("Index");
-        }
-
-        // GET: /Ventas/Comprobante/5
-        public IActionResult Comprobante(int id)
-        {
-            var venta = obtenerVentaPorId(id);
-            if (venta == null)
-                return NotFound();
-
-            return View(venta);
-        }
-
-        #endregion
+        CargarListasDesplegables();
+        return View("Create", vm);
     }
+
+    // POST: /Ventas/QuitarVenta (desde el form: action="Quitar:{idx}")
+    [HttpPost]
+    public IActionResult QuitarVenta(VentaCreate venta, int idx)
+    {
+        if (idx >= 0 && idx < venta.Lineas.Count)
+            venta.Lineas.RemoveAt(idx);
+
+        CargarListasDesplegables();
+        return View("Create", venta);
+    }
+
+    // GET: /Ventas/BuscarCamisas (usado por modal ajax)
+    [HttpGet]
+    public IActionResult BuscarCamisas([FromQuery] CamisaFiltro filtro)
+    {
+        var data = buscarCamisas(filtro);
+        return PartialView("BuscarCamisasPartial.cshtml", data);
+    }
+
+    // POST: /Ventas/Create  (registrar venta en el back)
+    [HttpPost]
+    public IActionResult Create(VentaCreate venta, string? action)
+    {
+        // Manejo de acciones del formulario (Agregar/Quitar)
+        if (action == "Agregar") return AgregarVenta(venta);
+        if (action?.StartsWith("Quitar:") == true)
+        {
+            var idxStr = action.Split(':')[1];
+            if (int.TryParse(idxStr, out var idx))
+                return QuitarVenta(venta, idx);
+        }
+
+        if (!venta.Lineas.Any())
+        {
+            ModelState.AddModelError("", "Agrega al menos una camisa.");
+            CargarListasDesplegables();
+            return View(venta);
+        }
+
+        var dto = new Venta
+        {
+            nombre_cliente = venta.Nombre_Cliente,
+            dni_cliente = venta.Dni_Cliente,
+            tipo_pago = venta.Tipo_Pago,
+            detalles = venta.Lineas.Select(l => new DetalleVenta
+            {
+                Id_Camisa = l.Id_Camisa,
+                Cantidad = l.Cantidad,
+                Precio = l.PrecioUnitario,
+                Estado = "Activo"
+            }).ToList()
+        };
+
+        var creada = registrarVenta(dto);
+        if (creada != null)
+        {
+            TempData["msg"] = "Venta Registrada Satisfactoriamente. Por favor imprimir boleta.";
+            return RedirectToAction(nameof(Comprobante), new { id = creada.id_venta });
+        }
+
+        ModelState.AddModelError("", "No se pudo registrar la venta.");
+        CargarListasDesplegables();
+        return View(venta);
+    }
+
+    // GET: /Ventas/Comprobante
+    public IActionResult Comprobante(int? id = null)
+    {
+        ViewBag.IdVenta = id;
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult Edit(int id)
+    {
+        var venta = obtenerVentas().FirstOrDefault(v => v.id_venta == id);
+        if (venta == null) return NotFound();
+
+        ViewBag.Estados = new List<string> { "Activo", "Anulado", "Pendiente" };
+        return View(venta);
+    }
+
+    //  POST /Ventas/Edit/{id} -> envía solo el estado al API
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Edit(int id, string estado)
+    {
+        if (string.IsNullOrWhiteSpace(estado))
+        {
+            ModelState.AddModelError("estado", "Selecciona un estado.");
+            var ventaInvalid = obtenerVentas().FirstOrDefault(v => v.id_venta == id) ?? new Venta { id_venta = id };
+            ViewBag.Estados = new List<string> { "Activo", "Anulado", "Pendiente" };
+            return View(ventaInvalid);
+        }
+
+        var ok = actualizarEstadoVenta(id, estado);
+        if (ok)
+        {
+            TempData["msg"] = "Estado actualizado correctamente.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        ModelState.AddModelError("", "No se pudo actualizar el estado en el servicio.");
+        var venta = obtenerVentas().FirstOrDefault(v => v.id_venta == id) ?? new Venta { id_venta = id };
+        ViewBag.Estados = new List<string> { "Activo", "Anulado", "Pendiente" };
+        return View(venta);
+    }
+
+    #endregion
 }
