@@ -50,7 +50,7 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
 
             if (user == null)
             {
-                ViewBag.Mensaje = "Usuario o clave incorrectos.";
+                ViewBag.Mensaje = "Credenciales inválidas.";
                 return View();
             }
 
@@ -66,6 +66,38 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("Usuario")))
             {
                 return RedirectToAction("Index", "Login");
+            }
+
+            try
+            {
+                using (var http = new HttpClient())
+                {
+                    http.BaseAddress = new Uri(_config["Services:URL"]);
+
+                    // Camisas
+                    var resp = http.GetAsync("camisas").Result;
+                    var data = resp.Content.ReadAsStringAsync().Result;
+                    var camisas = JsonConvert.DeserializeObject<List<Camisa>>(data);
+                    ViewBag.TotalCamisas = camisas?.Count ?? 0;
+
+                    // Usuarios
+                    resp = http.GetAsync("usuarios").Result;
+                    data = resp.Content.ReadAsStringAsync().Result;
+                    var usuarios = JsonConvert.DeserializeObject<List<Usuario>>(data);
+                    ViewBag.TotalUsuarios = usuarios?.Count ?? 0;
+
+                    // Ventas
+                    resp = http.GetAsync("ventas").Result;
+                    data = resp.Content.ReadAsStringAsync().Result;
+                    var ventas = JsonConvert.DeserializeObject<List<Venta>>(data);
+                    ViewBag.TotalVentas = ventas?.Count ?? 0;
+                }
+            }
+            catch
+            {
+                ViewBag.TotalCamisas = 0;
+                ViewBag.TotalUsuarios = 0;
+                ViewBag.TotalVentas = 0;
             }
 
             ViewData["Title"] = "Dashboard";

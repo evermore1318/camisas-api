@@ -1,63 +1,499 @@
 ﻿@model DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.Pedido
-
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Detalles del Pedido";
+    ViewData["Subtitle"] = "Información completa del pedido";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<h1>Detalles</h1>
+<div class="content-wrapper">
+    <!-- Header simple -->
+    <div class="page-header">
+        <h3>Detalles del Pedido</h3>
+        <a href="@Url.Action("Index", "Pedidos")" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Volver
+        </a>
+    </div>
 
-<div>
-    <h4>Pedido</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            ID
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IdPedido)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Descripcion)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Descripcion)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IdProveedor)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Proveedor.Nombre)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Fecha)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Fecha)
-        </dd>
-        <dt class = "col-sm-2">
-            Monto (S/.)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Monto)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Estado)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Estado)
-        </dd>
-        <dt>Cantidad de Pagos Realizados</dt>
-        <dd>@Model.CantidadPagos</dd>
+    <!-- Contenedor principal -->
+    <div class="details-container">
+        <!-- Información básica del pedido -->
+        <div class="pedido-info-card">
+            <div class="pedido-header">
+                <div class="pedido-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="pedido-title">
+                    <h4>Pedido #@Model.IdPedido.ToString().PadLeft(4, '0')</h4>
+                    <span class="pedido-description">@Model.Descripcion</span>
+                </div>
+                <div class="pedido-status">
+                    @{
+                        string estadoClass = "";
+                        string estadoIcon = "";
+                        switch (Model.Estado?.ToLower())
+                        {
+                            case "pendiente":
+                                estadoClass = "badge-pending";
+                                estadoIcon = "fas fa-clock";
+                                break;
+                            case "pagado":
+                                estadoClass = "badge-paid";
+                                estadoIcon = "fas fa-check-circle";
+                                break;
+                            case "cancelado":
+                                estadoClass = "badge-cancelled";
+                                estadoIcon = "fas fa-times-circle";
+                                break;
+                            default:
+                                estadoClass = "badge-default";
+                                estadoIcon = "fas fa-question-circle";
+                                break;
+                        }
+                    }
+                    <span class="badge @estadoClass">
+                        <i class="@estadoIcon"></i> @Model.Estado
+                    </span>
+                </div>
+            </div>
 
-        <dt>Monto Total de Pagos Acumulado (S/.)</dt>
-        <dd>@Model.MontoTotalPagos</dd>
+            <div class="info-grid">
+                <div class="info-section">
+                    <h5><i class="fas fa-building"></i> Información del Proveedor</h5>
+                    <div class="proveedor-info">
+                        <div class="proveedor-avatar">@Model.Proveedor.Nombre.Substring(0, 1).ToUpper()</div>
+                        <span class="proveedor-name">@Model.Proveedor.Nombre</span>
+                    </div>
+                </div>
 
-        <dt>Deuda Pendiente (S/.)</dt>
-        <dd>@Model.DeudaPendiente</dd>
+                <div class="info-section">
+                    <h5><i class="fas fa-calendar"></i> Fecha del Pedido</h5>
+                    <div class="fecha-info">
+                        <span class="fecha-text">@Model.Fecha.ToString("dddd, dd 'de' MMMM 'de' yyyy")</span>
+                        <span class="fecha-small">@Model.Fecha.ToString("dd/MM/yyyy")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    </dl>
+        <!-- Información financiera -->
+        <div class="financial-info-card">
+            <div class="financial-header">
+                <h5><i class="fas fa-dollar-sign"></i> Información Financiera</h5>
+            </div>
+
+            <div class="financial-grid">
+                <div class="financial-item">
+                    <div class="financial-label">Monto Total</div>
+                    <div class="financial-value total-amount">S/. @Model.Monto.ToString("N2")</div>
+                </div>
+
+                <div class="financial-item">
+                    <div class="financial-label">Pagos Realizados</div>
+                    <div class="financial-value payments-count">@Model.CantidadPagos pagos</div>
+                </div>
+
+                <div class="financial-item">
+                    <div class="financial-label">Monto Pagado</div>
+                    <div class="financial-value paid-amount">S/. @Model.MontoTotalPagos.ToString("N2")</div>
+                </div>
+
+                <div class="financial-item">
+                    <div class="financial-label">Deuda Pendiente</div>
+                    <div class="financial-value pending-debt">S/. @Model.DeudaPendiente.ToString("N2")</div>
+                </div>
+            </div>
+
+            <!-- Barra de progreso de pagos -->
+            <div class="progress-section">
+                <div class="progress-label">Progreso de Pago</div>
+                @{
+                    double porcentajePagado = Model.Monto > 0 ? (double)(Model.MontoTotalPagos / Model.Monto) * 100 : 0;
+                    string progressColor = porcentajePagado >= 100 ? "#28a745" : porcentajePagado >= 50 ? "#ffc107" : "#dc3545";
+                }
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: @porcentajePagado.ToString("F1")%; background-color: @progressColor;"></div>
+                </div>
+                <div class="progress-text">@porcentajePagado.ToString("F1")% pagado</div>
+            </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="actions-container">
+            <a href="@Url.Action("Edit", new { id = Model.IdPedido })" class="btn-action btn-edit">
+                <i class="fas fa-edit"></i>
+                Editar Pedido
+            </a>
+            <a href="@Url.Action("RegistrarPago", "Pagos", new { idPedido = Model.IdPedido })" class="btn-action btn-payment">
+                <i class="fas fa-credit-card"></i>
+                Registrar Pago
+            </a>
+            <a href="@Url.Action("Index")" class="btn-action btn-back-list">
+                <i class="fas fa-list"></i>
+                Volver al Listado
+            </a>
+        </div>
+    </div>
 </div>
-<div>
-    @Html.ActionLink("Editar", "Edit", new { id = Model.IdPedido }) |
-    <a asp-action="Index">Volver</a>
-</div>
+
+<style>
+    .content-wrapper {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding: 20px 0;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+        .page-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+    .btn-back {
+        background: #6c757d;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        transition: background 0.3s ease;
+    }
+
+        .btn-back:hover {
+            background: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+
+    .details-container {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .pedido-info-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .pedido-header {
+        background: #667eea;
+        color: white;
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .pedido-icon {
+        background: rgba(255, 255, 255, 0.2);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .pedido-title {
+        flex: 1;
+    }
+
+        .pedido-title h4 {
+            margin: 0 0 5px 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+    .pedido-description {
+        opacity: 0.9;
+        font-size: 14px;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .badge-pending {
+        color: #856404;
+        background: #fff3cd;
+    }
+
+    .badge-paid {
+        color: #155724;
+        background: #d4edda;
+    }
+
+    .badge-cancelled {
+        color: #721c24;
+        background: #f8d7da;
+    }
+
+    .badge-default {
+        color: #6c757d;
+        background: #e2e3e5;
+    }
+
+    .info-grid {
+        padding: 25px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    .info-section h5 {
+        margin: 0 0 15px 0;
+        color: #495057;
+        font-size: 16px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .info-section h5 i {
+            color: #667eea;
+        }
+
+    .proveedor-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .proveedor-avatar {
+        width: 40px;
+        height: 40px;
+        background: #17a2b8;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .proveedor-name {
+        font-weight: 500;
+        color: #2c3e50;
+        font-size: 16px;
+    }
+
+    .fecha-info {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .fecha-text {
+        color: #2c3e50;
+        font-weight: 500;
+        font-size: 16px;
+        text-transform: capitalize;
+    }
+
+    .fecha-small {
+        color: #6c757d;
+        font-size: 14px;
+        font-family: monospace;
+    }
+
+    .financial-info-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .financial-header {
+        background: #f8f9fa;
+        padding: 20px 25px;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+        .financial-header h5 {
+            margin: 0;
+            color: #495057;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .financial-header h5 i {
+                color: #28a745;
+            }
+
+    .financial-grid {
+        padding: 25px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .financial-item {
+        text-align: center;
+        padding: 15px;
+        border: 1px solid #ecf0f1;
+        border-radius: 8px;
+        background: #f8f9fa;
+    }
+
+    .financial-label {
+        font-size: 12px;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .financial-value {
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .total-amount {
+        color: #667eea;
+    }
+
+    .payments-count {
+        color: #17a2b8;
+    }
+
+    .paid-amount {
+        color: #28a745;
+    }
+
+    .pending-debt {
+        color: #dc3545;
+    }
+
+    .progress-section {
+        padding: 25px;
+        border-top: 1px solid #ecf0f1;
+    }
+
+    .progress-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+
+    .progress-bar {
+        background: #e9ecef;
+        height: 10px;
+        border-radius: 5px;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+
+    .progress-text {
+        font-size: 12px;
+        color: #6c757d;
+        text-align: center;
+    }
+
+    .actions-container {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 12px 25px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        min-width: 140px;
+        justify-content: center;
+    }
+
+    .btn-edit {
+        background: #fff3e0;
+        color: #f57c00;
+        border: 2px solid #f57c00;
+    }
+
+        .btn-edit:hover {
+            background: #f57c00;
+            color: white;
+        }
+
+    .btn-payment {
+        background: #e8f5e8;
+        color: #28a745;
+        border: 2px solid #28a745;
+    }
+
+        .btn-payment:hover {
+            background: #28a745;
+            color: white;
+        }
+
+    .btn-back-list {
+        background: #e9ecef;
+        color: #6c757d;
+        border: 2px solid #6c757d;
+    }
+
+        .btn-back-list:hover {
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+        }
+
+    /* Responsive adjustments */
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .financial-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .actions-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-action {
+        min-width: auto;
+    }
+</style>

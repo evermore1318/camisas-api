@@ -1,5 +1,7 @@
-﻿using DSW_PROYECTO_PALACIO_CAMISAS_API.Data.Contrato;
+﻿using Azure.Core;
+using DSW_PROYECTO_PALACIO_CAMISAS_API.Data.Contrato;
 using DSW_PROYECTO_PALACIO_CAMISAS_API.Models;
+using DSW_PROYECTO_PALACIO_CAMISAS_API.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Controllers
@@ -29,8 +31,16 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Registrar(Usuario usuario)
+        public async Task<IActionResult> Registrar(UsuarioRequest request)
         {
+            var usuario = new Usuario
+            {
+                Nombre = request.Nombre,
+                Password = request.Password,
+                IdRol = request.IdRol,
+                Estado = request.Estado
+            };
+
             return Ok(await Task.Run(() => usuarioDB.Registrar(usuario)));
         }
 

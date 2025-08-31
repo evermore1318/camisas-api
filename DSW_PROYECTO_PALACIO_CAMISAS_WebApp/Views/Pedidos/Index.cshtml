@@ -1,112 +1,515 @@
 ﻿@model IEnumerable<DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.Pedido>
-
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Gestión de Pedidos";
+    ViewData["Subtitle"] = "Administración de pedidos y pagos del sistema";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<h1>Lista de Pedidos</h1>
-
-<p>
-    <a asp-action="Create">Nuevo Pedido</a>
-</p>
-
-<form method="get">
-    <div class="row">
-        <div class="col-md-3">
-            <label class="form-label">Proveedor:</label>
-            <select name="proveedor" class="form-select" asp-items="@ViewBag.proveedores"></select>
-        </div>
-
-        <div class="col-md-2">
-            <label class="form-label">Año:</label>
-            <select name="anio" class="form-select" asp-items="@ViewBag.años"></select>
-        </div>
-
-        <div class="col-md-3">
-            <label class="form-label">Mes:</label>
-            <select name="mes" class="form-select" asp-items="ViewBag.meses"></select>
-        </div>
-        
+<div class="content-wrapper">
+    <!-- Header simple -->
+    <div class="page-header">
+        <h3>Lista de Pedidos</h3>
+        <a href="@Url.Action("Create", "Pedidos")" class="btn-create">
+            <i class="fas fa-plus"></i>
+            Nuevo Pedido
+        </a>
     </div>
-    <br />
-    <input class="btn btn-sm btn-outline-primary" type="submit" value="Consultar" />
-    <br />
-    <br />
-    <br />
-    <br />
-</form>
 
+    <!-- Filtros -->
+    <div class="filters-container">
+        <form method="get" class="filters-form">
+            <div class="filters-grid">
+                <div class="filter-item">
+                    <label class="filter-label">Proveedor:</label>
+                    <select name="proveedor" class="filter-select" asp-items="@ViewBag.proveedores">
+                        <option value="">Todos los proveedores</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label class="filter-label">Año:</label>
+                    <select name="anio" class="filter-select" asp-items="@ViewBag.años">
+                        <option value="">Todos los años</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label class="filter-label">Mes:</label>
+                    <select name="mes" class="filter-select" asp-items="ViewBag.meses">
+                        <option value="">Todos los meses</option>
+                    </select>
+                </div>
+                <div class="filter-item filter-actions">
+                    <button type="submit" class="btn-filter">
+                        <i class="fas fa-search"></i>
+                        Consultar
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                ID
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Descripcion)
-            </th>
-            <th>
-                Proveedor
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Fecha)
-            </th>
-            <th>
-                Monto (S/.)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Estado)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.IdPedido)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Descripcion)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Proveedor.Nombre)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Fecha)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Monto)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Estado)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { id=item.IdPedido }) |
-                @Html.ActionLink("Details", "Details", new { id=item.IdPedido }) |
-                @Html.ActionLink("Registrar Pago", "RegistrarPago", "Pagos", new { idPedido = item.IdPedido })
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    <!-- Tabla de pedidos -->
+    <div class="table-container">
+        <table class="pedidos-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Descripción</th>
+                    <th>Proveedor</th>
+                    <th>Fecha</th>
+                    <th>Monto (S/.)</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <span class="pedido-id">#@item.IdPedido.ToString().PadLeft(4, '0')</span>
+                        </td>
+                        <td>
+                            <div class="descripcion-cell">
+                                <span class="descripcion-text">@item.Descripcion</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="proveedor-cell">
+                                <div class="proveedor-avatar">@item.Proveedor.Nombre.Substring(0, 1).ToUpper()</div>
+                                <span class="proveedor-name">@item.Proveedor.Nombre</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="fecha-text">@item.Fecha.ToString("dd/MM/yyyy")</span>
+                        </td>
+                        <td>
+                            <span class="monto-text">S/. @item.Monto.ToString("N2")</span>
+                        </td>
+                        <td>
+                            @{
+                                string estadoClass = "";
+                                string estadoIcon = "";
+                                switch (item.Estado?.ToLower())
+                                {
+                                    case "pendiente":
+                                        estadoClass = "badge-pending";
+                                        estadoIcon = "fas fa-clock";
+                                        break;
+                                    case "pagado":
+                                        estadoClass = "badge-paid";
+                                        estadoIcon = "fas fa-check-circle";
+                                        break;
+                                    case "cancelado":
+                                        estadoClass = "badge-cancelled";
+                                        estadoIcon = "fas fa-times-circle";
+                                        break;
+                                    default:
+                                        estadoClass = "badge-default";
+                                        estadoIcon = "fas fa-question-circle";
+                                        break;
+                                }
+                            }
+                            <span class="badge @estadoClass">
+                                <i class="@estadoIcon"></i> @item.Estado
+                            </span>
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <a href="@Url.Action("Details", new { id = item.IdPedido })" class="btn-action btn-details" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="@Url.Action("Edit", new { id = item.IdPedido })" class="btn-action btn-edit" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="@Url.Action("RegistrarPago", "Pagos", new { idPedido = item.IdPedido })" class="btn-action btn-payment" title="Registrar Pago">
+                                    <i class="fas fa-credit-card"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
 
-<nav>
-    <ul class="pagination">
-        @for (int i = 1; i <= ViewBag.totalPaginas; i++)
+        @if (!Model.Any())
         {
-            <li class="page-item @(i == ViewBag.paginaActual ? "active" : "")">
-                <a class="page-link"
-                   asp-action="Index"
-                   asp-route-page="@i"
-                   asp-route-numreg="@ViewBag.numreg"
-                   asp-route-proveedor="@ViewBag.proveedorSeleccionado"
-                   asp-route-anio="@ViewBag.anioSeleccionado"
-                   asp-route-mes="@ViewBag.mesSeleccionado">
-                    @i
-                </a>
-            </li>
+            <div class="no-data">
+                <i class="fas fa-shopping-cart"></i>
+                <p>No hay pedidos registrados con los filtros seleccionados</p>
+            </div>
         }
-    </ul>
-</nav>
+    </div>
+
+    <!-- Paginación -->
+    @if (ViewBag.totalPaginas > 1)
+    {
+        <div class="pagination-container">
+            <nav class="pagination-nav">
+                <ul class="pagination-list">
+                    @for (int i = 1; i <= ViewBag.totalPaginas; i++)
+                    {
+                        <li class="pagination-item @(i == ViewBag.paginaActual ? "active" : "")">
+                            <a class="pagination-link"
+                               asp-action="Index"
+                               asp-route-page="@i"
+                               asp-route-numreg="@ViewBag.numreg"
+                               asp-route-proveedor="@ViewBag.proveedorSeleccionado"
+                               asp-route-anio="@ViewBag.anioSeleccionado"
+                               asp-route-mes="@ViewBag.mesSeleccionado">
+                                @i
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
+
+<style>
+    .content-wrapper {
+        max-width: 100%;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding: 20px 0;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+        .page-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+    .btn-create {
+        background: #667eea;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        transition: background 0.3s ease;
+    }
+
+        .btn-create:hover {
+            background: #5a6fd8;
+            color: white;
+            text-decoration: none;
+        }
+
+    .filters-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+
+    .filters-form {
+        margin: 0;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr auto;
+        gap: 20px;
+        align-items: end;
+    }
+
+    .filter-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .filter-select {
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        background: white;
+        color: #495057;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.3s ease;
+    }
+
+        .filter-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+    .btn-filter {
+        background: #28a745;
+        color: white;
+        padding: 8px 20px;
+        border: none;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.3s ease;
+        font-size: 14px;
+    }
+
+        .btn-filter:hover {
+            background: #218838;
+        }
+
+    .table-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 25px;
+    }
+
+    .pedidos-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .pedidos-table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .pedidos-table td {
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            vertical-align: middle;
+        }
+
+        .pedidos-table tr:hover {
+            background: #f8f9fa;
+        }
+
+    .pedido-id {
+        font-family: monospace;
+        font-weight: bold;
+        color: #667eea;
+        font-size: 14px;
+    }
+
+    .descripcion-cell {
+        max-width: 200px;
+    }
+
+    .descripcion-text {
+        color: #2c3e50;
+        font-weight: 500;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .proveedor-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .proveedor-avatar {
+        width: 30px;
+        height: 30px;
+        background: #17a2b8;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .proveedor-name {
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    .fecha-text {
+        color: #495057;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .monto-text {
+        color: #28a745;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .badge-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .badge-paid {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .badge-cancelled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .badge-default {
+        background: #e2e3e5;
+        color: #6c757d;
+    }
+
+    .actions-cell {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-action {
+        width: 30px;
+        height: 30px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-details {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+        .btn-details:hover {
+            background: #bbdefb;
+            color: #1565c0;
+        }
+
+    .btn-edit {
+        background: #fff3e0;
+        color: #f57c00;
+    }
+
+        .btn-edit:hover {
+            background: #ffe0b2;
+            color: #ef6c00;
+        }
+
+    .btn-payment {
+        background: #e8f5e8;
+        color: #28a745;
+    }
+
+        .btn-payment:hover {
+            background: #c3e6cb;
+            color: #1e7e34;
+        }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+    }
+
+        .no-data i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .no-data p {
+            margin: 0;
+            font-size: 16px;
+        }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+    }
+
+    .pagination-nav {
+        display: inline-block;
+    }
+
+    .pagination-list {
+        display: flex;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        gap: 5px;
+    }
+
+    .pagination-item {
+        margin: 0;
+    }
+
+    .pagination-link {
+        display: block;
+        padding: 8px 12px;
+        color: #667eea;
+        text-decoration: none;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+        .pagination-link:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+            text-decoration: none;
+            color: #495057;
+        }
+
+    .pagination-item.active .pagination-link {
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+    }
+
+        .pagination-item.active .pagination-link:hover {
+            background: #5a6fd8;
+            border-color: #5a6fd8;
+            color: white;
+        }
+
+    /* Responsive grid adjustments */
+    .filters-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .filter-actions {
+        justify-self: start;
+    }
+</style>

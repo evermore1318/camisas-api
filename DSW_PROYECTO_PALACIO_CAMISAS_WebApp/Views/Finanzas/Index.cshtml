@@ -1,49 +1,466 @@
 ﻿@{
     ViewData["Title"] = "Finanzas";
+    ViewData["Subtitle"] = "Dashboard financiero y análisis de ingresos/egresos";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<h2>Finanzas</h2>
-
-<form asp-controller="Finanzas" asp-action="Index" method="get" class="mb-4 d-flex gap-3 align-items-end">
-    <div class="form-group">
-        <label for="Anio">Año</label>
-        <input type="number" id="Anio" name="anio" class="form-control" 
-               value="@ViewBag.Anio" required style="width:150px;" />
+<div class="content-wrapper">
+    <!-- Header simple -->
+    <div class="page-header">
+        <h3>Dashboard Financiero</h3>
+        <a href="@Url.Action("Index", "Pedidos")" class="btn-primary">
+            <i class="fas fa-shopping-cart"></i>
+            Ir a Pedidos
+        </a>
     </div>
-    <div class="form-group">
-        <label for="Mes">Mes</label>
-        <select id="Mes" name="mes" class="form-select" asp-items="ViewBag.meses"></select>
+
+    <!-- Filtros -->
+    <div class="filters-container">
+        <form asp-controller="Finanzas" asp-action="Index" method="get" class="filters-form">
+            <div class="filters-grid">
+                <div class="filter-item">
+                    <label for="Anio" class="filter-label">Año</label>
+                    <input type="number" id="Anio" name="anio" class="filter-input"
+                           value="@ViewBag.Anio" required min="2020" max="2030" />
+                </div>
+                <div class="filter-item">
+                    <label for="Mes" class="filter-label">Mes</label>
+                    <select id="Mes" name="mes" class="filter-select" asp-items="ViewBag.meses">
+                        <option value="">Todos los meses</option>
+                    </select>
+                </div>
+                <div class="filter-item filter-actions">
+                    <button type="submit" class="btn-calculate">
+                        <i class="fas fa-calculator"></i>
+                        Calcular
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
-    <div class="form-group">
-        <button type="submit" class="btn btn-danger">Calcular</button>
-    </div>
-</form>
 
-@if (Model != null)
-{
-    <table class="table table-bordered text-center" style="width:50%; background-color:white;">
-        <tr class="table-primary">
-            <th colspan="2">Finanzas</th>
-        </tr>
-        <tr>
-            <td class="table-primary">Ingresos Mensuales</td>
-            <td style="background-color: #fff8c6;"><strong>@Model.IngresoMensual.ToString("C")</strong></td>
-        </tr>
-        <tr>
-            <td class="table-primary">Ingresos Anuales</td>
-            <td style="background-color: #fff8c6;"><strong>@Model.IngresoAnual.ToString("C")</strong></td>
-        </tr>
-        <tr>
-            <td class="table-primary">Egresos Mensuales</td>
-            <td style="background-color: #fff8c6;"><strong>@Model.EgresoMensual.ToString("C")</strong></td>
-        </tr>
-        <tr>
-            <td class="table-primary">Egresos Anuales</td>
-            <td style="background-color: #fff8c6;"><strong>@Model.EgresoAnual.ToString("C")</strong></td>
-        </tr>
-    </table>
-}
+    @if (Model != null)
+    {
+        <!-- Dashboard financiero -->
+        <div class="financial-dashboard">
+            <!-- Resumen de ingresos -->
+            <div class="financial-section">
+                <div class="section-header ingresos-header">
+                    <i class="fas fa-arrow-up"></i>
+                    <h4>Ingresos</h4>
+                </div>
+                <div class="financial-cards">
+                    <div class="financial-card ingreso-card">
+                        <div class="card-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-label">Ingreso Mensual</div>
+                            <div class="card-value ingreso-value">@Model.IngresoMensual.ToString("C")</div>
+                        </div>
+                    </div>
+                    <div class="financial-card ingreso-card">
+                        <div class="card-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-label">Ingreso Anual</div>
+                            <div class="card-value ingreso-value">@Model.IngresoAnual.ToString("C")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-<hr />
-<a asp-controller="Pedidos" asp-action="Index" class="btn btn-primary">Ir a Pedidos</a>
+            <!-- Resumen de egresos -->
+            <div class="financial-section">
+                <div class="section-header egresos-header">
+                    <i class="fas fa-arrow-down"></i>
+                    <h4>Egresos</h4>
+                </div>
+                <div class="financial-cards">
+                    <div class="financial-card egreso-card">
+                        <div class="card-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-label">Egreso Mensual</div>
+                            <div class="card-value egreso-value">@Model.EgresoMensual.ToString("C")</div>
+                        </div>
+                    </div>
+                    <div class="financial-card egreso-card">
+                        <div class="card-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="card-content">
+                            <div class="card-label">Egreso Anual</div>
+                            <div class="card-value egreso-value">@Model.EgresoAnual.ToString("C")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Resumen general -->
+            <div class="summary-section">
+                <div class="summary-card">
+                    <div class="summary-header">
+                        <i class="fas fa-chart-line"></i>
+                        <h4>Balance Financiero</h4>
+                    </div>
+                    <div class="summary-content">
+                        @{
+                            decimal balanceMensual = Model.IngresoMensual - Model.EgresoMensual;
+                            decimal balanceAnual = Model.IngresoAnual - Model.EgresoAnual;
+                        }
+                        <div class="balance-item">
+                            <span class="balance-label">Balance Mensual:</span>
+                            <span class="balance-value @(balanceMensual >= 0 ? "positive" : "negative")">
+                                @balanceMensual.ToString("C")
+                            </span>
+                        </div>
+                        <div class="balance-item">
+                            <span class="balance-label">Balance Anual:</span>
+                            <span class="balance-value @(balanceAnual >= 0 ? "positive" : "negative")">
+                                @balanceAnual.ToString("C")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="no-data-financial">
+            <i class="fas fa-chart-bar"></i>
+            <h4>No hay datos financieros</h4>
+            <p>Seleccione un año y mes para generar el reporte financiero</p>
+        </div>
+    }
+</div>
+
+<style>
+    .content-wrapper {
+        max-width: 100%;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding: 20px 0;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+        .page-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+    .btn-primary {
+        background: #667eea;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        transition: background 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            color: white;
+            text-decoration: none;
+        }
+
+    .filters-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+
+    .filters-form {
+        margin: 0;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: auto auto auto;
+        gap: 20px;
+        align-items: end;
+    }
+
+    .filter-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .filter-input,
+    .filter-select {
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        background: white;
+        color: #495057;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.3s ease;
+    }
+
+        .filter-input:focus,
+        .filter-select:focus {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
+        }
+
+    .btn-calculate {
+        background: #dc3545;
+        color: white;
+        padding: 8px 20px;
+        border: none;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.3s ease;
+        font-size: 14px;
+    }
+
+        .btn-calculate:hover {
+            background: #c82333;
+        }
+
+    .financial-dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .financial-section {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .section-header {
+        padding: 20px 25px;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+    }
+
+        .section-header h4 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+    .ingresos-header {
+        background: #28a745;
+    }
+
+    .egresos-header {
+        background: #dc3545;
+    }
+
+    .financial-cards {
+        padding: 25px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .financial-card {
+        border: 1px solid #ecf0f1;
+        border-radius: 8px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: transform 0.3s ease;
+    }
+
+        .financial-card:hover {
+            transform: translateY(-2px);
+        }
+
+    .ingreso-card {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-color: #28a745;
+    }
+
+    .egreso-card {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        border-color: #dc3545;
+    }
+
+    .card-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: white;
+    }
+
+    .ingreso-card .card-icon {
+        background: #28a745;
+    }
+
+    .egreso-card .card-icon {
+        background: #dc3545;
+    }
+
+    .card-content {
+        flex: 1;
+    }
+
+    .card-label {
+        font-size: 12px;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+
+    .card-value {
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    .ingreso-value {
+        color: #155724;
+    }
+
+    .egreso-value {
+        color: #721c24;
+    }
+
+    .summary-section {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .summary-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .summary-header {
+        padding: 20px 25px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .summary-header h4 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+    .summary-content {
+        padding: 25px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .balance-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+        .balance-item:last-child {
+            border-bottom: none;
+        }
+
+    .balance-label {
+        font-weight: 500;
+        opacity: 0.9;
+    }
+
+    .balance-value {
+        font-size: 18px;
+        font-weight: 700;
+        padding: 5px 15px;
+        border-radius: 15px;
+    }
+
+        .balance-value.positive {
+            background: rgba(40, 167, 69, 0.3);
+            color: #c3e6cb;
+        }
+
+        .balance-value.negative {
+            background: rgba(220, 53, 69, 0.3);
+            color: #f5c6cb;
+        }
+
+    .no-data-financial {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 60px;
+        text-align: center;
+        color: #6c757d;
+    }
+
+        .no-data-financial i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .no-data-financial h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 20px;
+        }
+
+        .no-data-financial p {
+            margin: 0;
+            font-size: 16px;
+        }
+
+    /* Responsive adjustments */
+    .filters-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+
+    .financial-cards {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .summary-content {
+        padding: 20px;
+    }
+</style>

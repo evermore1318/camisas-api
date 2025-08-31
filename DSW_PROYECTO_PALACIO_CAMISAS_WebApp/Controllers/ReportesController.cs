@@ -63,9 +63,7 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Controllers
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SetFontSize(16)
                 );
-
-                var table = new Table(UnitValue.CreatePercentArray(new float[] { 1, 3, 3, 2, 2 }))
-                    .UseAllAvailableWidth();
+                var table = new Table(UnitValue.CreatePercentArray(new float[] { 1, 3, 3, 2, 2 })).UseAllAvailableWidth();
 
                 table.AddHeaderCell("N°");
                 table.AddHeaderCell("Boleta");

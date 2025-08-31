@@ -95,7 +95,7 @@
                 <!-- Reportes -->
                 <div class="nav-item has-submenu" id="nav-reportes">
                     <a href="#" class="nav-toggle" onclick="toggleSubmenu(this)">
-                        <i class="fas fa-chart-bar"></i>
+                        <i class="fas fa-search"></i>
                         Reportes
                         <i class="fas fa-chevron-down submenu-arrow"></i>
                     </a>
@@ -103,6 +103,21 @@
                         <a href="@Url.Action("Index", "Reportes")" id="nav-reporte-diario">
                             <i class="fas fa-calendar-day"></i>
                             Reporte Diario
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Finanzas -->
+                <div class="nav-item has-submenu" id="nav-finanzas">
+                    <a href="#" class="nav-toggle" onclick="toggleSubmenu(this)">
+                        <i class="fas fa-chart-bar"></i>
+                        Finanzas
+                        <i class="fas fa-chevron-down submenu-arrow"></i>
+                    </a>
+                    <div class="submenu">
+                        <a href="@Url.Action("Index", "Finanzas")" id="nav-finanzas">
+                            <i class="fas fa-search"></i>
+                            Ingreso y Egresos
                         </a>
                     </div>
                 </div>
@@ -211,6 +226,10 @@
                 case 'reportes':
                     document.getElementById('nav-reportes')?.classList.add('active');
                     document.querySelector('#nav-reportes .submenu')?.classList.add('active');
+                    break;
+                case 'finanzas':
+                    document.getElementById('nav-finanzas')?.classList.add('active');
+                    document.querySelector('#nav-finanzas .submenu')?.classList.add('active');
                     break;
                 case 'usuarios':
                     document.getElementById('nav-usuarios')?.classList.add('active');
