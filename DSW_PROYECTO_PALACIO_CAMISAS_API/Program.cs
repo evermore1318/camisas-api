@@ -1,6 +1,7 @@
 using DSW_PROYECTO_PALACIO_CAMISAS_API.Data.Contrato;
 using DSW_PROYECTO_PALACIO_CAMISAS_API.Data;
 using Microsoft.Win32;
+using DSW_PROYECTO_PALACIO_CAMISAS_API.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,15 @@ builder.Services.AddScoped<ICamisa, CamisaRepositorio>();
 builder.Services.AddScoped<IMarca, MarcaRepositorio>();
 builder.Services.AddScoped<IEstante, EstanteRepositorio>();
 builder.Services.AddScoped<IVenta, VentaRepositorio>();
+builder.Services.AddScoped<IProveedor, ProveedorRepositorio>();
+builder.Services.AddScoped<IPedido, PedidoRepositorio>();
+builder.Services.AddScoped<IPago, PagoRepositorio>();
+builder.Services.AddScoped<IFinanzas, FinanzasRepositorio>();
+builder.Services.AddScoped<IReportes, ReporteRepositorio>();
+
+builder.Services.AddScoped<IAuth, AuthRepositorio>();
+builder.Services.AddScoped<IUsuario, UsuarioRepositorio>();
+
 
 var app = builder.Build();
 

@@ -1,0 +1,159 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["Subtitle"] = "Panel de control principal";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<!-- Solo el contenido específico del Dashboard -->
+<div class="dashboard-grid">
+    <!-- Card Mantenimientos -->
+    <div class="dashboard-card" onclick="toggleSubmenuCard('mantenimientos')">
+        <div class="card-icon maintenance">
+            <i class="fas fa-tools"></i>
+        </div>
+        <div class="card-content">
+            <h3>Mantenimientos</h3>
+            <p>Gestión de productos, marcas y categorías del sistema</p>
+            <div class="card-stats">
+                <span class="stat-number">4</span>
+                <span class="stat-label">Módulos disponibles</span>
+            </div>
+        </div>
+        <div class="card-submenu" id="mantenimientos-submenu">
+            <a href="@Url.Action("Index", "Camisas")" class="submenu-link">
+                <i class="fas fa-tshirt"></i> Camisas
+            </a>
+            <a href="@Url.Action("Index", "Marcas")" class="submenu-link">
+                <i class="fas fa-tag"></i> Marcas
+            </a>
+            <a href="#" class="submenu-link" onclick="showComingSoon('Categorías')">
+                <i class="fas fa-list"></i> Categorías
+            </a>
+            <a href="#" class="submenu-link" onclick="showComingSoon('Proveedores')">
+                <i class="fas fa-truck"></i> Proveedores
+            </a>
+        </div>
+    </div>
+
+    <!-- Card Ventas -->
+    <div class="dashboard-card" onclick="location.href='@Url.Action("Index", "Ventas")'">
+        <div class="card-icon sales">
+            <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div class="card-content">
+            <h3>Ventas</h3>
+            <p>Control de ventas y facturación del sistema</p>
+            <div class="card-stats">
+                <span class="stat-number">$47,250</span>
+                <span class="stat-label">Este mes</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Pedidos -->
+    <div class="dashboard-card" onclick="location.href='@Url.Action("Index", "Pedidos")'">
+        <div class="card-icon orders">
+            <i class="fas fa-clipboard-list"></i>
+        </div>
+        <div class="card-content">
+            <h3>Pedidos</h3>
+            <p>Gestión y seguimiento de pedidos de clientes</p>
+            <div class="card-stats">
+                <span class="stat-number">23</span>
+                <span class="stat-label">Pedidos pendientes</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Reportes -->
+    <div class="dashboard-card" onclick="location.href='@Url.Action("Index", "Reportes")'">
+        <div class="card-icon reports">
+            <i class="fas fa-chart-bar"></i>
+        </div>
+        <div class="card-content">
+            <h3>Reportes</h3>
+            <p>Análisis y reportes estadísticos del negocio</p>
+            <div class="card-stats">
+                <span class="stat-number">12</span>
+                <span class="stat-label">Reportes generados</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Usuarios -->
+    <div class="dashboard-card" onclick="location.href='@Url.Action("Index", "Usuarios")'">
+        <div class="card-icon users">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="card-content">
+            <h3>Usuarios</h3>
+            <p>Administración de usuarios y permisos del sistema</p>
+            <div class="card-stats">
+                <span class="stat-number">15</span>
+                <span class="stat-label">Usuarios activos</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Inventario -->
+    <div class="dashboard-card" onclick="showComingSoon('Inventario')">
+        <div class="card-icon inventory">
+            <i class="fas fa-boxes"></i>
+        </div>
+        <div class="card-content">
+            <h3>Inventario</h3>
+            <p>Control de stock y productos en almacén</p>
+            <div class="card-stats">
+                <span class="stat-number">1,247</span>
+                <span class="stat-label">Productos en stock</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-number">1,247</div>
+            <div class="stat-label">Ventas Este Mes</div>
+            <div class="stat-change positive">+12.5%</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-number">156</div>
+            <div class="stat-label">Clientes Activos</div>
+            <div class="stat-change positive">+8</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-box"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-number">89</div>
+            <div class="stat-label">Productos</div>
+            <div class="stat-change negative">-3</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-number" id="currentTime">00:00:00</div>
+            <div class="stat-label">Hora Actual</div>
+            <div class="stat-change">Sistema activo</div>
+        </div>
+    </div>
+</div>
