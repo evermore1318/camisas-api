@@ -2,50 +2,120 @@
 @{
     ViewData["Title"] = "Editar Estado de Venta";
     var estados = (List<string>)ViewBag.Estados ?? new List<string>();
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<h2>@ViewData["Title"]</h2>
+<div class="content-wrapper">
+    <!-- Header -->
+    <div class="page-header">
+        <h3><i class="fas fa-edit"></i> @ViewData["Title"]</h3>
+        <a asp-action="Index" class="btn-create btn-sm">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
 
-<form asp-action="Edit" method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" name="id" value="@Model.id_venta" />
+    <form asp-action="Edit" method="post" class="form-edit-venta">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.id_venta" />
 
-    <div class="card mb-3">
-        <div class="card-body row g-3">
-            <div class="col-md-3">
-                <label class="form-label">Venta N°</label>
-                <input class="form-control" value="@Model.id_venta" readonly />
+        <!-- Datos de la venta -->
+        <div class="card-lite mb-4">
+            <div class="card-lite-header">
+                <h5 class="card-lite-title"><i class="fas fa-receipt"></i> Datos de la Venta</h5>
             </div>
-            <div class="col-md-5">
-                <label class="form-label">Cliente</label>
-                <input class="form-control" value="@Model.nombre_cliente" readonly />
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Fecha</label>
-                <input class="form-control" value="@Model.fecha.ToString("dd/MM/yyyy")" readonly />
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Total</label>
-                <input class="form-control text-end" value="@Model.precio_total.ToString("0.00")" readonly />
+            <div class="card-lite-body form-grid">
+                <div class="form-item">
+                    <label class="filter-label">Venta N°</label>
+                    <input class="filter-input" value="@Model.id_venta" readonly />
+                </div>
+                <div class="form-item form-item-2x">
+                    <label class="filter-label">Cliente</label>
+                    <input class="filter-input" value="@Model.nombre_cliente" readonly />
+                </div>
+                <div class="form-item">
+                    <label class="filter-label">Fecha</label>
+                    <input class="filter-input" value="@Model.fecha.ToString("dd/MM/yyyy")" readonly />
+                </div>
+                <div class="form-item">
+                    <label class="filter-label">Total</label>
+                    <input class="filter-input text-end" value="@Model.precio_total.ToString("0.00")" readonly />
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="mb-3">
-        <label class="form-label">Estado</label>
-        <select name="estado" class="form-select">
-            @foreach (var e in estados)
-            {
-                <option value="@e" selected="@(Model.estado == e)">
-                    @e
-                </option>
-            }
-        </select>
-        <span class="text-danger">@Html.ValidationMessage("estado")</span>
-    </div>
+        <!-- Estado editable -->
+        <div class="card-lite mb-4">
+            <div class="card-lite-header">
+                <h5 class="card-lite-title"><i class="fas fa-flag"></i> Cambiar Estado</h5>
+            </div>
+            <div class="card-lite-body">
+                <label class="filter-label">Estado</label>
+                <select name="estado" class="filter-select">
+                    @foreach (var e in estados)
+                    {
+                        <option value="@e" selected="@(Model.estado == e ? "selected" : null)">
+                            @e
+                        </option>
+                      }
+                </select>
+                <span class="text-danger">@Html.ValidationMessage("estado")</span>
+            </div>
+        </div>
 
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Guardar</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-    </div>
-</form>
+        <!-- Acciones -->
+        <div class="actions-bar">
+            <button type="submit" class="btn-primary-solid">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+            <a asp-action="Index" class="btn-secondary-outline">
+                <i class="fas fa-times"></i> Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Styles{
+<style>
+    .content-wrapper { max-width: 900px; margin: 0 auto; }
+
+    .page-header {
+        display:flex;justify-content:space-between;align-items:center;
+        margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #ecf0f1;
+    }
+    .page-header h3 { margin:0;color:#2c3e50;font-size:22px;display:flex;gap:10px;align-items:center; }
+    .btn-create {
+        background:#667eea;color:white;padding:8px 14px;border-radius:6px;
+        text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+        font-weight:500;transition:background .3s;
+    }
+    .btn-create:hover { background:#5a6fd8; }
+
+    .card-lite { background:#fff; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.08); border:1px solid #ecf0f1; }
+    .card-lite-header { padding:14px 16px; border-bottom:1px solid #ecf0f1; background:#f8fafc; display:flex; align-items:center; gap:8px; }
+    .card-lite-title { margin:0; font-size:16px; color:#2c3e50; display:flex; gap:8px; align-items:center; }
+    .card-lite-body { padding:16px; }
+
+    .form-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; }
+    .form-item { display:flex; flex-direction:column; }
+    .form-item-2x { grid-column:span 2; }
+
+    .filter-label { font-weight:600; color:#495057; margin-bottom:6px; font-size:14px; }
+    .filter-input, .filter-select {
+        padding:8px 12px;border:1px solid #ced4da;border-radius:4px;background:#fff;
+        color:#495057;font-size:14px;outline:none;transition:border-color .3s;
+    }
+    .filter-input:focus, .filter-select:focus { border-color:#667eea; box-shadow:0 0 0 2px rgba(102,126,234,.1); }
+
+    .actions-bar { display:flex; gap:12px; justify-content:flex-end; margin-top:20px; }
+    .btn-primary-solid {
+        background:#667eea;color:#fff;border:none;border-radius:6px;padding:10px 18px;
+        font-weight:600;display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+    }
+    .btn-primary-solid:hover { background:#5a6fd8; }
+    .btn-secondary-outline {
+        background:#f8f9fa;color:#343a40;border:1px solid #dee2e6;border-radius:6px;
+        padding:10px 18px;font-weight:500;display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+    }
+    .btn-secondary-outline:hover { background:#e9ecef; }
+</style>
+}

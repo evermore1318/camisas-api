@@ -46,3 +46,52 @@ button.accept-policy {
   white-space: nowrap;
   line-height: 60px;
 }
+
+.card {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.card-header {
+    font-size: 0.95rem;
+    letter-spacing: .5px;
+}
+
+.table th {
+    font-weight: 600;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f5f7fa;
+    transition: 0.2s ease-in;
+}
+/* Print */
+@media print {
+    .btn, .top-bar, .sidebar, .mobile-menu-btn {
+        display: none !important
+    }
+
+    .receipt-card {
+        box-shadow: none;
+        border: 0;
+        margin: 0;
+        page-break-inside: avoid
+    }
+
+    body {
+        background: #fff
+    }
+}
+
+@media (max-width:600px) {
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch
+    }
+
+    .searchbar {
+        width: 100%
+    }
+}
+
+</style >

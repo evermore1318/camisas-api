@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Net;
 
 public class VentasController : Controller
 {
@@ -108,18 +110,18 @@ public class VentasController : Controller
             return resp.IsSuccessStatusCode;
         }
     }
+    
+    
     #endregion
 
     #region . ACCIONES MVC .
 
     // GET: /Ventas/Index
     [HttpGet]
-    public IActionResult Index()
+    public IActionResult Index(string? dni, int? id)
     {
         var ventas = obtenerVentas();
-
-        // Si tu API aún no expone /ventas, puedes dejar un mock temporal:
-        if (ventas == null || ventas.Count == 0)
+        if (ventas == null || ventas.Count == 0) // mock x si no hay ventas
         {
             ventas = new List<Venta>
                 {
@@ -135,21 +137,17 @@ public class VentasController : Controller
                             new DetalleVenta{ Id_Camisa = 1, Cantidad = 2, Precio = 50 },
                             new DetalleVenta{ Id_Camisa = 2, Cantidad = 1, Precio = 70 }
                         }
-                    },
-                    new Venta
-                    {
-                        id_venta = 2,
-                        nombre_cliente = "María Gómez",
-                        dni_cliente = "87654321",
-                        tipo_pago = "Tarjeta",
-                        fecha = DateTime.Now.AddDays(-1),
-                        detalles = new List<DetalleVenta>
-                        {
-                            new DetalleVenta{ Id_Camisa = 3, Cantidad = 3, Precio = 45 }
-                        }
                     }
                 };
         }
+        if (!string.IsNullOrWhiteSpace(dni))
+            ventas = ventas.Where(v => (v.dni_cliente ?? "").Contains(dni.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+
+        if (id.HasValue)
+            ventas = ventas
+                .Where(v => v.id_venta == id.Value)
+                .ToList();
+
 
         //agregado para el listado de ventas
         var cache = new Dictionary<int, Camisa>();
@@ -206,6 +204,9 @@ public class VentasController : Controller
             // recalcular el total en base a los subtotales
             v.precio_total = v.DetallesTotal.Sum(x => x.Subtotal);
         }
+
+        ViewBag.f_dni = dni;
+        ViewBag.f_id = id;
 
         return View(ventas);
     }
@@ -323,9 +324,21 @@ public class VentasController : Controller
     // GET: /Ventas/Comprobante
     public IActionResult Comprobante(int? id = null)
     {
-        ViewBag.IdVenta = id;
+        if (id == null) return RedirectToAction(nameof(Index));
+
+        var venta = obtenerVentas().FirstOrDefault(v => v.id_venta == id);
+        if (venta == null) return RedirectToAction(nameof(Index));
+
+        ViewBag.IdVenta = venta.id_venta;
+        ViewBag.Cliente = venta.nombre_cliente;
+        ViewBag.Dni = venta.dni_cliente;
+        ViewBag.TipoPago = venta.tipo_pago;
+        ViewBag.Fecha = venta.fecha;
+        ViewBag.Total = venta.precio_total;
+
         return View();
     }
+
 
     [HttpGet]
     public IActionResult Edit(int id)

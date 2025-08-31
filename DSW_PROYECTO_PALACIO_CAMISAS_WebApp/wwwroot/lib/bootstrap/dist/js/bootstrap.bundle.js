@@ -5202,7 +5202,8 @@
       return true;
     }
 
-    const regExp = allowedAttributeList.filter(attrRegex => attrRegex instanceof RegExp); // Check if a regular expression validates the attribute.
+      const regExp = allowedAttributeList.filter(attrRegex => attrRegex instanceof RegExp); // Check if a regular 
+ssion validates the attribute.
 
     for (let i = 0, len = regExp.length; i < len; i++) {
       if (regExp[i].test(attrName)) {

@@ -1,73 +1,415 @@
 ﻿@model IEnumerable<DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.Venta>
 
 @{
-    ViewData["Title"] = "Ventas con Detalles";
+    ViewData["Title"] = "Gestión de Ventas";
+    ViewData["Subtitle"] = "Listado de boletas y detalles";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<h2 class="mb-3">Listado de Ventas con Detalles</h2>
+<div class="content-wrapper">
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Registrar Nueva Venta</a>
-</p>
+    <!-- Header con acción y filtros -->
+    <div class="page-header">
+        <h3>Lista de Ventas</h3>
 
-@foreach (var venta in Model)
-{
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-dark text-white">
-            <div class="d-flex justify-content-between">
-                <span>
-                    <strong>Venta N°:</strong> @venta.id_venta  |
-                    <strong>Cliente:</strong> @venta.nombre_cliente  |
-                    <strong>Fecha:</strong> @venta.fecha.ToString("dd/MM/yyyy")
-                </span>
-                <span>
-                    <strong>Total: </strong> S/. @venta.precio_total.ToString("0.00")
-                </span>
-            </div>
-        </div>
-        <div class="card-body p-0">
-            <table class="table table-bordered m-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Camisa</th>
-                        <th>Presentación (Color/Talla/Manga)</th>
-                        <th class="text-end">Cantidad</th>
-                        <th class="text-end">Precio Unitario</th>
-                        <th class="text-end">Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (venta.DetallesTotal != null && venta.DetallesTotal.Any())
-                    {
-                        foreach (var det in venta.DetallesTotal)
-                        {
-                            <tr>
-                                <td>@det.Descripcion</td>
-                                <td>@det.Presentacion</td>
-                                <td class="text-end">@det.Cantidad</td>
-                                <td class="text-end">S/. @det.PrecioUnitario.ToString("0.00")</td>
-                                <td class="text-end">S/. @det.Subtotal.ToString("0.00")</td>
-                            </tr>
-                        }
-                    }
-                    else if (venta.detalles != null && venta.detalles.Any())
-                    {
-                        foreach (var det in venta.detalles)
-                        {
-                            <tr>
-                                <td>Camisa #@det.Id_Camisa</td>
-                                <td>-</td>
-                                <td class="text-end">@det.Cantidad</td>
-                                <td class="text-end">S/. @det.Precio.ToString("0.00")</td>
-                                <td class="text-end">S/. @(det.Cantidad * det.Precio)</td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
-        </div>
-        <div class="card-footer text-end">
-            <a asp-action="Edit" asp-route-id="@venta.id_venta" class="btn btn-warning btn-sm">Editar</a>
+        <div class="page-header-actions">
+            <form method="get" class="filters-inline" asp-action="Index" asp-controller="Ventas">
+                <div class="input-group">
+                    <label for="dni" class="sr-only">DNI</label>
+                    <input id="dni" name="dni" value="@((string)ViewBag.f_dni ?? "")"
+                           class="filter-input" placeholder="Buscar por DNI" />
+
+                    <label for="id" class="sr-only">N° Venta</label>
+                    <input id="id" name="id" value="@((int?)ViewBag.f_id ?? null)"
+                           class="filter-input" placeholder="Buscar por N° Venta" />
+
+                    <button type="submit" class="btn-filter">
+                        <i class="fas fa-search"></i> Consultar
+                    </button>
+                </div>
+            </form>
+
+            <a href="@Url.Action("Create","Ventas")" class="btn-create">
+                <i class="fas fa-plus"></i>
+                Registrar Nueva Venta
+            </a>
         </div>
     </div>
-}
+
+    <!-- Lista de boletas -->
+    <div class="boletas-container">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var venta in Model)
+            {
+                <div class="boleta-card">
+                    <div class="boleta-header">
+                        <div class="boleta-header-left">
+                            <div class="boleta-titulo">
+                                <span class="badge badge-boleta">BOLETA</span>
+                                <strong class="boleta-num">N° @venta.id_venta.ToString().PadLeft(4, '0')</strong>
+                            </div>
+                            <div class="boleta-meta">
+                                <span><strong>Cliente:</strong> @venta.nombre_cliente</span>
+                                @if (!string.IsNullOrWhiteSpace(venta.dni_cliente))
+                                {
+                                    <span><strong>DNI:</strong> @venta.dni_cliente</span>
+                                }
+                                <span><strong>Fecha:</strong> @venta.fecha.ToString("dd/MM/yyyy")</span>
+                            </div>
+                        </div>
+                        <div class="boleta-header-right">
+                            <div class="boleta-total">
+                                <span>Total</span>
+                                <h4>S/. @venta.precio_total.ToString("N2")</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="boleta-body">
+                        <table class="boleta-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 32%;">Camisa</th>
+                                    <th style="width: 28%;">Presentación (Color/Talla/Manga)</th>
+                                    <th class="text-end" style="width: 10%;">Cant.</th>
+                                    <th class="text-end" style="width: 15%;">P. Unit.</th>
+                                    <th class="text-end" style="width: 15%;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (venta.DetallesTotal != null && venta.DetallesTotal.Any())
+                                {
+                                    foreach (var det in venta.DetallesTotal)
+                                    {
+                                        <tr>
+                                            <td>@det.Descripcion</td>
+                                            <td>@det.Presentacion</td>
+                                            <td class="text-end">@det.Cantidad</td>
+                                            <td class="text-end">S/. @det.PrecioUnitario.ToString("N2")</td>
+                                            <td class="text-end">S/. @det.Subtotal.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                }
+                                else if (venta.detalles != null && venta.detalles.Any())
+                                {
+                                    foreach (var det in venta.detalles)
+                                    {
+                                        var subtotal = det.Cantidad * det.Precio;
+                                        <tr>
+                                            <td>Camisa #@det.Id_Camisa</td>
+                                            <td>-</td>
+                                            <td class="text-end">@det.Cantidad</td>
+                                            <td class="text-end">S/. @det.Precio.ToString("N2")</td>
+                                            <td class="text-end">S/. @subtotal.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="no-rows">Sin detalles para esta venta.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="boleta-footer">
+                        <div class="boleta-acciones">
+                            <a href="@Url.Action("Edit", new { id = venta.id_venta })" class="btn-action btn-edit" title="Editar estado">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="@Url.Action("Imprimir", new { id = venta.id_venta })" class="btn-action btn-print" title="Imprimir boleta">
+                                <i class="fas fa-print"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="no-data">
+                <i class="fas fa-receipt"></i>
+                <p>No hay ventas registradas con los filtros seleccionados</p>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .content-wrapper {
+        max-width: 100%;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding: 20px 0;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+        .page-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+    .page-header-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .filters-inline .input-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .filter-input {
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        background: white;
+        color: #495057;
+        font-size: 14px;
+        min-width: 180px;
+        outline: none;
+        transition: border-color .3s;
+    }
+
+        .filter-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102,126,234,.1);
+        }
+
+    .btn-filter {
+        background: #28a745;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background .3s ease;
+        font-size: 14px;
+    }
+
+        .btn-filter:hover {
+            background: #218838;
+        }
+
+    .btn-create {
+        background: #667eea;
+        color: white;
+        padding: 10px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        transition: background .3s ease;
+    }
+
+        .btn-create:hover {
+            background: #5a6fd8;
+            color: white;
+            text-decoration: none;
+        }
+
+    /* Boletas (tarjetas/recibos) */
+    .boletas-container {
+        display: grid;
+        gap: 16px;
+    }
+
+    .boleta-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,.08);
+        overflow: hidden;
+        border: 1px solid #ecf0f1;
+    }
+
+    .boleta-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 18px;
+        border-bottom: 1px dashed #d1d5db;
+        background: linear-gradient(180deg,#f8fafc,#fff);
+    }
+
+    .boleta-titulo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .badge-boleta {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .boleta-num {
+        color: #2c3e50;
+        font-size: 16px;
+        letter-spacing: .3px;
+    }
+
+    .boleta-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        color: #495057;
+        font-size: 14px;
+        margin-top: 6px;
+    }
+
+    .boleta-header-right .boleta-total {
+        text-align: right;
+    }
+
+    .boleta-total span {
+        display: block;
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .boleta-total h4 {
+        margin: 0;
+        font-size: 20px;
+        color: #2c3e50;
+    }
+
+    .boleta-body {
+        padding: 0;
+    }
+
+    .boleta-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .boleta-table thead th {
+            background: #f8f9fa;
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            font-size: 14px;
+        }
+
+        .boleta-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #ecf0f1;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .boleta-table tr:hover {
+            background: #f8f9fa;
+        }
+
+    .text-end {
+        text-align: right;
+    }
+
+    .boleta-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding: 10px 12px;
+        background: #fafbfc;
+        border-top: 1px solid #ecf0f1;
+    }
+
+    .boleta-acciones {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-action {
+        width: 34px;
+        height: 34px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 13px;
+        transition: all .25s ease;
+    }
+
+    .btn-details {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+        .btn-details:hover {
+            background: #bbdefb;
+            color: #1565c0;
+        }
+
+    .btn-edit {
+        background: #fff3e0;
+        color: #f57c00;
+    }
+
+        .btn-edit:hover {
+            background: #ffe0b2;
+            color: #ef6c00;
+        }
+
+    .btn-print {
+        background: #f1f3f5;
+        color: #343a40;
+    }
+
+        .btn-print:hover {
+            background: #e9ecef;
+            color: #212529;
+        }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+    }
+
+        .no-data i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: .5;
+        }
+
+    .no-rows {
+        text-align: center;
+        color: #6c757d;
+    }
+
+    /* Utilidades */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0,0,0,0);
+        border: 0;
+
+    }
+</style>

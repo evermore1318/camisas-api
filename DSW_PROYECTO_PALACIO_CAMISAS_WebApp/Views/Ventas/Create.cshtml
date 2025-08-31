@@ -1,161 +1,294 @@
 ﻿@using DSW_PROYECTO_PALACIO_CAMISAS_WebApp.ViewModels
 @model VentaCreate
+
 @{
     ViewData["Title"] = "Registrar Venta";
-}
-<h2>@ViewData["Title"]</h2>
-
-@if (TempData["msg"] != null)
-{
-    <div class="alert alert-info">@TempData["msg"]</div>
+    ViewData["Subtitle"] = "Generar boleta con detalle";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<form asp-action="Create" method="post">
-    <div class="card mb-3">
-        <div class="card-body row g-3">
-            <div class="col-md-4">
-                <label class="form-label">DNI</label>
-                <input asp-for="Dni_Cliente" class="form-control" required />
-            </div>
-            <div class="col-md-5">
-                <label class="form-label">Nombre Cliente</label>
-                <input asp-for="Nombre_Cliente" class="form-control" required />
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Tipo Pago</label>
-                <select asp-for="Tipo_Pago" class="form-select">
-                    <option>Efectivo</option>
-                    <option>Tarjeta</option>
-                    <option>Yape</option>
-                    <option>Plin</option>
-                </select>
-            </div>
+<div class="content-wrapper">
+    <!-- Header -->
+    <div class="page-header">
+        <h3>Registrar Venta (Boleta)</h3>
+
+        <div class="page-header-actions">
+            <a href="@Url.Action("Index","Ventas")" class="btn-action btn-details" title="Volver al listado">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <a href="@Url.Action("Create","Ventas")" class="btn-create">
+                <i class="fas fa-plus"></i>
+                Nueva Venta
+            </a>
         </div>
     </div>
 
-    <div class="card mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span>Detalle</span>
-            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#buscarCamisa">Buscar Camisa</button>
+    @if (TempData["msg"] != null)
+    {
+        <div class="alert-soft info mb-3">
+            <i class="fas fa-info-circle"></i> @TempData["msg"]
         </div>
-        <div class="card-body row g-3">
-            <div class="col-md-4">
-                <label class="form-label">Camisa ID seleccionado</label>
-                <input asp-for="CamisaSeleccionadaId" class="form-control" />
-                <small class="text-muted">Se llena al elegir en el modal</small>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Cantidad</label>
-                <input asp-for="Cantidad" type="number" min="1" class="form-control" />
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Precio (opcional)</label>
-                <input asp-for="PrecioUnitario" type="number" step="0.01" class="form-control" />
-            </div>
-            <div class="col-md-3 align-self-end">
-                <!-- usa name="action" como espera tu controller -->
-                <button name="action" value="Agregar" class="btn btn-success w-100">Agregar línea</button>
-            </div>
+    }
 
-            <div class="col-12">
-                <table class="table table-bordered align-middle">
-                    <thead>
-                        <tr><th>#</th><th>Camisa</th><th>Presentación</th><th>Cant</th><th>Precio</th><th>Subtotal</th><th></th></tr>
-                    </thead>
-                    <tbody>
-                        @for (int i = 0; i < Model.Lineas.Count; i++)
-                        {
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        <!-- Datos del cliente -->
+        <div class="card-lite mb-3">
+            <div class="card-lite-header">
+                <h5 class="card-lite-title"><i class="fas fa-user"></i> Datos del Cliente</h5>
+            </div>
+            <div class="card-lite-body">
+                <div class="form-grid">
+                    <div class="form-item">
+                        <label asp-for="Dni_Cliente" class="filter-label">DNI</label>
+                        <input asp-for="Dni_Cliente" class="filter-input" placeholder="Ej: 76543210" required />
+                        <span asp-validation-for="Dni_Cliente" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-item form-item-2x">
+                        <label asp-for="Nombre_Cliente" class="filter-label">Nombre Cliente</label>
+                        <input asp-for="Nombre_Cliente" class="filter-input" placeholder="Nombre y Apellido" required />
+                        <span asp-validation-for="Nombre_Cliente" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-item">
+                        <label asp-for="Tipo_Pago" class="filter-label">Tipo de Pago</label>
+                        <select asp-for="Tipo_Pago" class="filter-select">
+                            <option>Efectivo</option>
+                            <option>Tarjeta</option>
+                            <option>Yape</option>
+                            <option>Plin</option>
+                        </select>
+                        <span asp-validation-for="Tipo_Pago" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detalle de la venta -->
+        <div class="card-lite mb-3">
+
+            <div class="card-lite-body">
+                <div class="form-grid align-end">
+                    <div class="form-item">
+                        <label class="filter-label">Camisa seleccionada (ID)</label>
+                        <input asp-for="CamisaSeleccionadaId" class="filter-input" placeholder="Se llena al seleccionar" />
+                        <span asp-validation-for="CamisaSeleccionadaId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-item">
+                        <label asp-for="Cantidad" class="filter-label">Cantidad</label>
+                        <input asp-for="Cantidad" type="number" min="1" class="filter-input" />
+                        <span asp-validation-for="Cantidad" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-item">
+                        <label asp-for="PrecioUnitario" class="filter-label">Precio (opcional)</label>
+                        <input asp-for="PrecioUnitario" type="number" step="0.01" class="filter-input" />
+                        <span asp-validation-for="PrecioUnitario" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-item">
+                        <label class="sr-only">Agregar</label>
+                        <button name="action" value="Agregar" class="btn-create w-100">
+                            <i class="fas fa-cart-plus"></i> Agregar línea
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container mt-3">
+                    <table class="pedidos-table">
+                        <thead>
                             <tr>
-                                <td>@(i + 1)</td>
-                                <td>@Model.Lineas[i].Descripcion</td>
-                                <td>@Model.Lineas[i].Presentacion</td>
-                                <td class="text-end">@Model.Lineas[i].Cantidad</td>
-                                <td class="text-end">@Model.Lineas[i].PrecioUnitario.ToString("0.00")</td>
-                                <td class="text-end">@Model.Lineas[i].Subtotal.ToString("0.00")</td>
-                                <td class="text-end">
-                                    <!-- “Quitar:{idx}” como parsea tu controller -->
-                                    <button name="action" value="Quitar:@i" class="btn btn-sm btn-outline-danger">Quitar</button>
-                                </td>
+                                <th>#</th>
+                                <th>Camisa</th>
+                                <th>Presentación</th>
+                                <th class="text-end">Cant.</th>
+                                <th class="text-end">Precio</th>
+                                <th class="text-end">Subtotal</th>
+                                <th class="text-end">Acciones</th>
                             </tr>
-                            <input type="hidden" name="Lineas[@i].Id_Camisa" value="@Model.Lineas[i].Id_Camisa" />
-                            <input type="hidden" name="Lineas[@i].Descripcion" value="@Model.Lineas[i].Descripcion" />
-                            <input type="hidden" name="Lineas[@i].Presentacion" value="@Model.Lineas[i].Presentacion" />
-                            <input type="hidden" name="Lineas[@i].Cantidad" value="@Model.Lineas[i].Cantidad" />
-                            <input type="hidden" name="Lineas[@i].PrecioUnitario" value="@Model.Lineas[i].PrecioUnitario" />
-                        }
-                        }
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <th colspan="5" class="text-end">TOTAL</th>
-                            <th class="text-end">@Model.Total.ToString("0.00")</th>
-                            <th></th>
-                        </tr>
-                    </tfoot>
-                </table>
+                        </thead>
+                        <tbody>
+                            @if (Model.Lineas != null && Model.Lineas.Count > 0)
+                            {
+                                for (int i = 0; i < Model.Lineas.Count; i++)
+                                {
+                                    <tr>
+                                        <td>@(i + 1)</td>
+                                        <td>@Model.Lineas[i].Descripcion</td>
+                                        <td>@Model.Lineas[i].Presentacion</td>
+                                        <td class="text-end">@Model.Lineas[i].Cantidad</td>
+                                        <td class="text-end">S/. @Model.Lineas[i].PrecioUnitario.ToString("N2")</td>
+                                        <td class="text-end">S/. @Model.Lineas[i].Subtotal.ToString("N2")</td>
+                                        <td class="text-end">
+                                            <button name="action" value="Quitar:@i" class="btn-action btn-edit" title="Quitar">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Hidden inputs para model binding -->
+                                    <input type="hidden" name="Lineas[@i].Id_Camisa" value="@Model.Lineas[i].Id_Camisa" />
+                                    <input type="hidden" name="Lineas[@i].Descripcion" value="@Model.Lineas[i].Descripcion" />
+                                    <input type="hidden" name="Lineas[@i].Presentacion" value="@Model.Lineas[i].Presentacion" />
+                                    <input type="hidden" name="Lineas[@i].Cantidad" value="@Model.Lineas[i].Cantidad" />
+                                    <input type="hidden" name="Lineas[@i].PrecioUnitario" value="@Model.Lineas[i].PrecioUnitario" />
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="no-rows">Aún no has agregado productos.</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="5" class="text-end">TOTAL</th>
+                                <th class="text-end">
+                                    <span id="totalTexto">S/. @Model.Total.ToString("N2")</span>
+                                </th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Registrar</button>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Salir</a>
-    </div>
-    <div asp-validation-summary="All" class="text-danger"></div>
-</form>
-
-<!-- Modal para buscar camisa -->
-<div class="modal fade" id="buscarCamisa" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Buscar Camisa</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row g-2 mb-2">
-                    <div class="col-md-3"><input id="f_marcaId" class="form-control" placeholder="MarcaId (opcional)" /></div>
-                    <div class="col-md-2"><input id="f_tipo" class="form-control" placeholder="Tipo" /></div>
-                    <div class="col-md-2"><input id="f_talla" class="form-control" placeholder="Talla" /></div>
-                    <div class="col-md-2"><input id="f_manga" class="form-control" placeholder="Manga" /></div>
-                    <div class="col-md-2"><input id="f_color" class="form-control" placeholder="Color" /></div>
-                    <div class="col-md-1"><button class="btn btn-primary w-100" type="button" id="btnBuscar">Buscar</button></div>
-                </div>
-                <div id="resultadoCamisas" class="table-responsive">
-                    <div class="text-center text-muted">Escribe filtros y presiona Buscar…</div>
-                </div>
-            </div>
-            <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button></div>
+        <!-- Acciones -->
+        <div class="actions-bar">
+            <button type="submit" class="btn-primary-solid">
+                <i class="fas fa-save"></i> Registrar
+            </button>
+            <a asp-controller="Ventas" asp-action="Index" class="btn-secondary-outline">
+                <i class="fas fa-sign-out-alt"></i> Salir
+            </a>
         </div>
-    </div>
+
+        <div asp-validation-summary="All" class="text-danger mt-2"></div>
+    </form>
 </div>
 
+@section Styles{
+<style>
+    .content-wrapper { max-width: 100%; }
+
+    .page-header {
+        display:flex; justify-content:space-between; align-items:center;
+        margin-bottom:25px; padding:20px 0; border-bottom:1px solid #ecf0f1;
+    }
+    .page-header h3 { margin:0; color:#2c3e50; font-size:24px; }
+    .page-header-actions { display:flex; gap:10px; align-items:center; }
+
+    /* Botones base (compatibles con archivo de Pedidos) */
+    .btn-create {
+        background:#667eea; color:#fff; padding:10px 16px; border-radius:6px; text-decoration:none;
+        display:inline-flex; align-items:center; gap:8px; font-weight:500; transition:background .3s;
+    }
+    .btn-create:hover { background:#5a6fd8; color:#fff; text-decoration:none; }
+
+    .btn-filter {
+        background:#28a745; color:#fff; padding:8px 16px; border:none; border-radius:4px;
+        font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:background .3s;
+        font-size:14px;
+    }
+    .btn-filter:hover { background:#218838; }
+
+    .btn-action {
+        width:34px; height:34px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center;
+        text-decoration:none; font-size:13px; transition:all .25s ease;
+    }
+    .btn-details { background:#e3f2fd; color:#1976d2; }
+    .btn-details:hover { background:#bbdefb; color:#1565c0; }
+    .btn-edit { background:#fff3e0; color:#f57c00; }
+    .btn-edit:hover { background:#ffe0b2; color:#ef6c00; }
+
+    .btn-primary-solid {
+        background:#667eea; color:#fff; border:none; border-radius:6px; padding:10px 18px;
+        font-weight:600; display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn-secondary-outline {
+        background:#f8f9fa; color:#343a40; border:1px solid #dee2e6; border-radius:6px; padding:10px 18px;
+        font-weight:500; display:inline-flex; align-items:center; gap:8px; text-decoration:none;
+    }
+
+    .alert-soft {
+        border-radius:8px; padding:12px 14px; display:flex; gap:8px; align-items:center; font-weight:500;
+        border:1px solid #cfe2ff; color:#084298; background:#e7f1ff;
+    }
+
+    /* Card lite */
+    .card-lite { background:#fff; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.08); overflow:hidden; border:1px solid #ecf0f1; }
+    .card-lite-header { padding:14px 16px; border-bottom:1px solid #ecf0f1; background:#f8fafc; display:flex; align-items:center; gap:12px; }
+    .card-lite-header.between { justify-content:space-between; }
+    .card-lite-title { margin:0; font-size:16px; color:#2c3e50; display:flex; gap:10px; align-items:center; }
+    .card-lite-body { padding:16px; }
+
+    /* Form grid */
+    .form-grid {
+        display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;
+    }
+    .form-item { display:flex; flex-direction:column; }
+    .form-item-2x { grid-column:span 2; }
+    .align-end { align-items:end; }
+
+    .filter-label { font-weight:600; color:#495057; margin-bottom:8px; font-size:14px; }
+    .filter-input, .filter-select {
+        padding:8px 12px; border:1px solid #ced4da; border-radius:4px; background:#fff; color:#495057; font-size:14px;
+        outline:none; transition:border-color .3s ease;
+    }
+    .filter-input:focus, .filter-select:focus { border-color:#667eea; box-shadow:0 0 0 2px rgba(102,126,234,.1); }
+    .muted { color:#6c757d; font-size:12px; }
+
+    /* Tabla detalle (reutiliza estilos de pedidos) */
+    .table-container { background:#fff; border-radius:10px; overflow:hidden; }
+    .pedidos-table { width:100%; border-collapse:collapse; }
+    .pedidos-table th {
+        background:#f8f9fa; padding:12px 14px; text-align:left; font-weight:600; color:#2c3e50; border-bottom:2px solid #ecf0f1; font-size:14px;
+    }
+    .pedidos-table td { padding:12px 14px; border-bottom:1px solid #ecf0f1; vertical-align:middle; font-size:14px; }
+    .pedidos-table tr:hover { background:#f8f9fa; }
+    .text-end { text-align:right; }
+    .no-rows { text-align:center; color:#6c757d; }
+
+    .actions-bar { display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0; }
+
+</style>
+}
+
 @section Scripts {
-    <script>
-        (function(){
-          const $ = s => document.querySelector(s);
-          const qs = params => new URLSearchParams(params).toString();
+<script>
+(function () {
+    const $ = s => document.querySelector(s);
+    const qs = params => new URLSearchParams(params).toString();
 
-          // buscar camisas (carga partial)
-          $('#btnBuscar').addEventListener('click', async () => {
-            const url = '@Url.Action("BuscarCamisas", "Ventas")' + '?' + qs({
-              MarcaId: $('#f_marcaId').value || '',
-              Tipo:    $('#f_tipo').value    || '',
-              Talla:   $('#f_talla').value   || '',
-              Manga:   $('#f_manga').value   || '',
-              Color:   $('#f_color').value   || ''
-            });
-            const html = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' } }).then(r=>r.text());
-            $('#resultadoCamisas').innerHTML = html;
+    // Buscar camisas (carga partial)
+    $('#btnBuscar')?.addEventListener('click', async () => {
+        const url = '@Url.Action("BuscarCamisas", "Ventas")' + '?' + qs({
+            MarcaId: $('#f_marcaId')?.value || '',
+            Tipo:    $('#f_tipo')?.value    || '',
+            Talla:   $('#f_talla')?.value   || '',
+            Manga:   $('#f_manga')?.value   || '',
+            Color:   $('#f_color')?.value   || ''
+        });
+        const html = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } }).then(r => r.text());
+        $('#resultadoCamisas').innerHTML = html;
 
-            // enlaza botones "Seleccionar" del partial
-            document.querySelectorAll('[data-select-camisa]').forEach(btn=>{
-                btn.addEventListener('click', e=>{
-                    const id = e.currentTarget.getAttribute('data-id');
-                    document.querySelector('input[name="CamisaSeleccionadaId"]').value = id;
-                    bootstrap.Modal.getInstance(document.getElementById('buscarCamisa')).hide();
-                });
+        // Enlaza botones "Seleccionar" del partial que devuelve la lista
+        document.querySelectorAll('[data-select-camisa]').forEach(btn => {
+            btn.addEventListener('click', e => {
+                const id = e.currentTarget.getAttribute('data-id');
+                document.querySelector('input[name="CamisaSeleccionadaId"]').value = id;
+                const modalEl = document.getElementById('buscarCamisa');
+                bootstrap.Modal.getInstance(modalEl)?.hide();
             });
-        })();
-    </script>
+        });
+    });
+})();
+</script>
 }

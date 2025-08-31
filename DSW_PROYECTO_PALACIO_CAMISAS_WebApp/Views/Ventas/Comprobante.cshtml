@@ -1,21 +1,123 @@
 ﻿@{
     ViewData["Title"] = "Comprobante";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
     var idVenta = (int?)ViewBag.IdVenta;
 }
-<div class="card">
-    <div class="card-body">
-        <h3 class="mb-3">Comprobante de Venta</h3>
 
-        @if (TempData["msg"] != null)
-        {
-            <div class="alert alert-success">@TempData["msg"]</div>
-        }
-
-        <p><strong>ID de venta:</strong> @idVenta</p>
-
-        <div class="mt-3 d-flex gap-2">
-            <a asp-action="Index" class="btn btn-secondary">Volver a ventas</a>
-            <a asp-action="Imprimir" asp-route-id="@idVenta" class="btn btn-primary">Imprimir</a>
+<div class="content-wrapper">
+    <!-- Header -->
+    <div class="page-header">
+        <h3>Comprobante de Venta</h3>
+        <div>
+            <a asp-action="Index" class="btn-create btn-sm">
+                <i class="fas fa-arrow-left"></i> Volver a Ventas
+            </a>
+            <a asp-action="Imprimir" asp-route-id="@idVenta" class="btn-create btn-sm" style="background:#28a745">
+                <i class="fas fa-print"></i> Imprimir
+            </a>
         </div>
     </div>
+
+    <!-- Mensaje -->
+    @if (TempData["msg"] != null)
+    {
+        <div class="alert alert-success">@TempData["msg"]</div>
+    }
+
+    <table class="table">
+        <tr>
+            <th>ID Venta</th>
+            <td>@(ViewBag.IdVenta ?? "-")</td>
+        </tr>
+        <tr>
+            <th>Cliente</th>
+            <td>@($"{(ViewBag.Cliente ?? "-")} ({(ViewBag.Dni ?? "-")})")</td>
+        </tr>
+        <tr>
+            <th>Tipo Pago</th>
+            <td>@(ViewBag.TipoPago ?? "-")</td>
+        </tr>
+        <tr>
+            <th>Fecha</th>
+            <td>@(ViewBag.Fecha is DateTime f ? f.ToString("dd/MM/yyyy HH:mm") : "-")</td>
+        </tr>
+        <tr>
+            <th>Total</th>
+            <td><strong>S/. @(ViewBag.Total is decimal t ? t.ToString("N2") : "0.00")</strong></td>
+        </tr>
+    </table>
+
 </div>
+
+<style>
+    .content-wrapper {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+        .page-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+    .btn-create {
+        background: #667eea;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+        transition: background .3s ease;
+    }
+
+        .btn-create:hover {
+            background: #5a6fd8;
+        }
+
+    .table-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+        margin-bottom: 25px;
+    }
+
+    .pedidos-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .pedidos-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .pedidos-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+            vertical-align: middle;
+        }
+
+    .monto-text {
+        color: #28a745;
+        font-weight: 600;
+        font-size: 15px;
+    }
+</style>
