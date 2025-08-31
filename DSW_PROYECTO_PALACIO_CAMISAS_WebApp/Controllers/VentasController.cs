@@ -93,7 +93,21 @@ public class VentasController : Controller
             ViewBag.Marcas = new SelectList(marcas ?? new List<Marca>(), "id_marca", "descripcion");
         }
     }
-
+    private bool actualizarEstadoVenta(int id, string nuevoEstado)
+    {
+        using (var http = new HttpClient())
+        {
+            http.BaseAddress = new Uri(_config["Services:URL"]);
+            var payload = new { estado = nuevoEstado }; // solo mandamos estado
+            var content = new StringContent(
+                JsonConvert.SerializeObject(payload),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            var resp = http.PutAsync($"api/ventas/{id}", content).Result;
+            return resp.IsSuccessStatusCode;
+        }
+    }
     #endregion
 
     #region . ACCIONES MVC .
@@ -313,16 +327,41 @@ public class VentasController : Controller
         return View();
     }
 
+    [HttpGet]
+    public IActionResult Edit(int id)
+    {
+        var venta = obtenerVentas().FirstOrDefault(v => v.id_venta == id);
+        if (venta == null) return NotFound();
+
+        ViewBag.Estados = new List<string> { "Activo", "Anulado", "Pendiente" };
+        return View(venta);
+    }
+
+    //  POST /Ventas/Edit/{id} -> envía solo el estado al API
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Edit(int id, string estado)
+    {
+        if (string.IsNullOrWhiteSpace(estado))
+        {
+            ModelState.AddModelError("estado", "Selecciona un estado.");
+            var ventaInvalid = obtenerVentas().FirstOrDefault(v => v.id_venta == id) ?? new Venta { id_venta = id };
+            ViewBag.Estados = new List<string> { "Activo", "Anulado", "Pendiente" };
+            return View(ventaInvalid);
+        }
+
+        var ok = actualizarEstadoVenta(id, estado);
+        if (ok)
+        {
+            TempData["msg"] = "Estado actualizado correctamente.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        ModelState.AddModelError("", "No se pudo actualizar el estado en el servicio.");
+        var venta = obtenerVentas().FirstOrDefault(v => v.id_venta == id) ?? new Venta { id_venta = id };
+        ViewBag.Estados = new List<string> { "Activo", "Anulado", "Pendiente" };
+        return View(venta);
+    }
+
     #endregion
-}
-
-// ---- ViewModels auxiliares (si no están ya en tu proyecto) ----
-public class CamisaFiltro
-{
-    public int? MarcaId { get; set; }
-    public string? Tipo { get; set; }
-    public string? Talla { get; set; }
-    public string? Manga { get; set; }
-    public string? Color { get; set; }
-
 }
