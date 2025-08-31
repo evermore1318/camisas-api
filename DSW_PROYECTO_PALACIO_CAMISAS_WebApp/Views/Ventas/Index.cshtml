@@ -49,6 +49,18 @@
                                 <span class="badge badge-boleta">BOLETA</span>
                                 <strong class="boleta-num">N° @venta.id_venta.ToString().PadLeft(4, '0')</strong>
                             </div>
+
+                            @{
+                                string estado = venta.estado?.Trim().ToLower() ?? "";
+                                string estadoClass = estado switch
+                                {
+                                    "activo" => "badge-paid",
+                                    "anulado" => "badge-cancelled",
+                                    "pendiente" => "badge-pending",
+                                    _ => "badge-default" 
+                                };
+                            }
+
                             <div class="boleta-meta">
                                 <span><strong>Cliente:</strong> @venta.nombre_cliente</span>
                                 @if (!string.IsNullOrWhiteSpace(venta.dni_cliente))
@@ -56,6 +68,9 @@
                                     <span><strong>DNI:</strong> @venta.dni_cliente</span>
                                 }
                                 <span><strong>Fecha:</strong> @venta.fecha.ToString("dd/MM/yyyy")</span>
+                                <span class="badge @estadoClass" title="Estado de la venta" style="margin-left:6px;">
+                                    @venta.estado
+                                </span>
                             </div>
                         </div>
                         <div class="boleta-header-right">
@@ -169,6 +184,40 @@
         gap: 8px;
         align-items: center;
     }
+
+    /* Badges de estado */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 14px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1;
+    }
+
+    .badge-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    /* amarillo */
+    .badge-paid {
+        background: #d4edda;
+        color: #155724;
+    }
+    /* verde */
+    .badge-cancelled {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    /* rojo */
+    .badge-default {
+        background: #e2e3e5;
+        color: #6c757d;
+    }
+    /* gris */
+
 
     .filter-input {
         padding: 8px 12px;

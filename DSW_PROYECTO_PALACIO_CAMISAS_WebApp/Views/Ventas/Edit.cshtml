@@ -1,8 +1,21 @@
 ﻿@model DSW_PROYECTO_PALACIO_CAMISAS_WebApp.Models.Venta
 @{
-    ViewData["Title"] = "Editar Estado de Venta";
+    ViewData["Title"] = "Ver Venta";
     var estados = (List<string>)ViewBag.Estados ?? new List<string>();
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@if (TempData["msg"] != null)
+{
+    <div class="alert-soft info" id="flashMsg" style="margin-bottom:16px;">
+        <i class="fas fa-check-circle"></i> @TempData["msg"]
+    </div>
+}
+@section Scripts {
+    <script>
+        // Ocultar el alerta en 4s
+        setTimeout(()=> document.getElementById('flashMsg')?.remove(), 4000);
+    </script>
 }
 
 <div class="content-wrapper">
@@ -51,12 +64,17 @@
             <div class="card-lite-body">
                 <label class="filter-label">Estado</label>
                 <select name="estado" class="filter-select">
-                    @foreach (var e in estados)
+                    @foreach (var e in (List<string>)ViewBag.Estados)
                     {
-                        <option value="@e" selected="@(Model.estado == e ? "selected" : null)">
-                            @e
-                        </option>
-                      }
+                        if (Model.estado == e)
+                        {
+                            <option value="@e" selected="selected">@e</option>
+                        }
+                        else
+                        {
+                            <option value="@e">@e</option>
+                        }
+                    }
                 </select>
                 <span class="text-danger">@Html.ValidationMessage("estado")</span>
             </div>

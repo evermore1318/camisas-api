@@ -106,12 +106,26 @@ public class VentasController : Controller
                 System.Text.Encoding.UTF8,
                 "application/json"
             );
-            var resp = http.PutAsync($"api/ventas/{id}", content).Result;
+            var resp = http.PutAsync($"ventas/{id}", content).Result;
             return resp.IsSuccessStatusCode;
         }
     }
-    
-    
+
+    private Venta obtenerVentaPorId(int id)
+    {
+        using (var http = new HttpClient())
+        {
+            http.BaseAddress = new Uri(_config["Services:URL"]);
+            var resp = http.GetAsync($"ventas/{id}").Result;  
+            if (!resp.IsSuccessStatusCode) return null;
+
+            var json = resp.Content.ReadAsStringAsync().Result;
+            return string.IsNullOrWhiteSpace(json)
+                ? null
+                : JsonConvert.DeserializeObject<Venta>(json);
+        }
+    }
+
     #endregion
 
     #region . ACCIONES MVC .
@@ -343,12 +357,16 @@ public class VentasController : Controller
     [HttpGet]
     public IActionResult Edit(int id)
     {
-        var venta = obtenerVentas().FirstOrDefault(v => v.id_venta == id);
-        if (venta == null) return NotFound();
-
+        var venta = obtenerVentaPorId(id);
+        if (venta == null)
+        {
+            TempData["msg"] = "No se encontró la venta en el servicio.";
+            return RedirectToAction(nameof(Index));
+        }
         ViewBag.Estados = new List<string> { "Activo", "Anulado", "Pendiente" };
         return View(venta);
     }
+
 
     //  POST /Ventas/Edit/{id} -> envía solo el estado al API
     [HttpPost]
