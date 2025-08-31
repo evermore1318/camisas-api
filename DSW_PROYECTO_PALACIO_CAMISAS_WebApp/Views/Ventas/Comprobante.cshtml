@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Comprobante";
+    var idVenta = (int?)ViewBag.IdVenta;
+}
+<div class="card">
+    <div class="card-body">
+        <h3 class="mb-3">Comprobante de Venta</h3>
+
+        @if (TempData["msg"] != null)
+        {
+            <div class="alert alert-success">@TempData["msg"]</div>
+        }
+
+        <p><strong>ID de venta:</strong> @idVenta</p>
+
+        <div class="mt-3 d-flex gap-2">
+            <a asp-action="Index" class="btn btn-secondary">Volver a ventas</a>
+            <a asp-action="Imprimir" asp-route-id="@idVenta" class="btn btn-primary">Imprimir</a>
+        </div>
+    </div>
+</div>

@@ -7,7 +7,7 @@
 
 @if (TempData["msg"] != null)
 {
-     <div class="alert alert-info">@TempData["msg"]</div>
+    <div class="alert alert-info">@TempData["msg"]</div>
 }
 
 <form asp-action="Create" method="post">
@@ -41,7 +41,7 @@
         <div class="card-body row g-3">
             <div class="col-md-4">
                 <label class="form-label">Camisa ID seleccionado</label>
-                <input asp-for="CamisaSeleccionadaId" class="form-control" />
+                <input asp-for="CamisaSeleccionadaId" class="form-control" readonly />
                 <small class="text-muted">Se llena al elegir en el modal</small>
             </div>
             <div class="col-md-2">
@@ -53,12 +53,15 @@
                 <input asp-for="PrecioUnitario" type="number" step="0.01" class="form-control" />
             </div>
             <div class="col-md-3 align-self-end">
+                <!-- usa name="action" como espera tu controller -->
                 <button name="action" value="Agregar" class="btn btn-success w-100">Agregar línea</button>
             </div>
 
             <div class="col-12">
                 <table class="table table-bordered align-middle">
-                    <thead><tr><th>#</th><th>Camisa</th><th>Presentación</th><th>Cant</th><th>Precio</th><th>Subtotal</th><th></th></tr></thead>
+                    <thead>
+                        <tr><th>#</th><th>Camisa</th><th>Presentación</th><th>Cant</th><th>Precio</th><th>Subtotal</th><th></th></tr>
+                    </thead>
                     <tbody>
                         @for (int i = 0; i < Model.Lineas.Count; i++)
                         {
@@ -66,19 +69,26 @@
                                 <td>@(i + 1)</td>
                                 <td>@Model.Lineas[i].Descripcion</td>
                                 <td>@Model.Lineas[i].Presentacion</td>
-                                <td>@Model.Lineas[i].Cantidad</td>
-                                <td>@Model.Lineas[i].PrecioUnitario.ToString("0.00")</td>
-                                <td>@Model.Lineas[i].Subtotal.ToString("0.00")</td>
+                                <td class="text-end">@Model.Lineas[i].Cantidad</td>
+                                <td class="text-end">@Model.Lineas[i].PrecioUnitario.ToString("0.00")</td>
+                                <td class="text-end">@Model.Lineas[i].Subtotal.ToString("0.00")</td>
                                 <td class="text-end">
+                                    <!-- “Quitar:{idx}” como parsea tu controller -->
                                     <button name="action" value="Quitar:@i" class="btn btn-sm btn-outline-danger">Quitar</button>
                                 </td>
                             </tr>
+                            <input type="hidden" name="Lineas[@i].Id_Camisa" value="@Model.Lineas[i].Id_Camisa" />
+                            <input type="hidden" name="Lineas[@i].Descripcion" value="@Model.Lineas[i].Descripcion" />
+                            <input type="hidden" name="Lineas[@i].Presentacion" value="@Model.Lineas[i].Presentacion" />
+                            <input type="hidden" name="Lineas[@i].Cantidad" value="@Model.Lineas[i].Cantidad" />
+                            <input type="hidden" name="Lineas[@i].PrecioUnitario" value="@Model.Lineas[i].PrecioUnitario" />
+                        }
                         }
                     </tbody>
                     <tfoot>
                         <tr>
                             <th colspan="5" class="text-end">TOTAL</th>
-                            <th>@Model.Total.ToString("0.00")</th>
+                            <th class="text-end">@Model.Total.ToString("0.00")</th>
                             <th></th>
                         </tr>
                     </tfoot>
@@ -88,19 +98,19 @@
     </div>
 
     <div class="d-flex gap-2">
-        <button class="btn btn-primary">Registrar</button>
+        <button type="submit" class="btn btn-primary">Registrar</button>
         <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Salir</a>
     </div>
     <div asp-validation-summary="All" class="text-danger"></div>
 </form>
 
-<!-- Modal Buscar Camisa -->
-<div class="modal fade" id="buscarCamisa" tabindex="-1">
-    <div class="modal-dialog modal-xl">
+<!-- Modal para buscar camisa -->
+<div class="modal fade" id="buscarCamisa" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Buscar Camisa</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
                 <div class="row g-2 mb-2">
@@ -109,9 +119,11 @@
                     <div class="col-md-2"><input id="f_talla" class="form-control" placeholder="Talla" /></div>
                     <div class="col-md-2"><input id="f_manga" class="form-control" placeholder="Manga" /></div>
                     <div class="col-md-2"><input id="f_color" class="form-control" placeholder="Color" /></div>
-                    <div class="col-md-1"><button class="btn btn-primary w-100" type="button" onclick="buscar()">Buscar</button></div>
+                    <div class="col-md-1"><button class="btn btn-primary w-100" type="button" id="btnBuscar">Buscar</button></div>
                 </div>
-                <div id="resultadoCamisas">Escribe filtros y presiona Buscar…</div>
+                <div id="resultadoCamisas" class="table-responsive">
+                    <div class="text-center text-muted">Escribe filtros y presiona Buscar…</div>
+                </div>
             </div>
             <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button></div>
         </div>
@@ -120,25 +132,30 @@
 
 @section Scripts {
     <script>
-        function buscar(){
-          const p = new URLSearchParams({
-            MarcaId: document.getElementById('f_marcaId').value,
-            Tipo: document.getElementById('f_tipo').value,
-            Talla: document.getElementById('f_talla').value,
-            Manga: document.getElementById('f_manga').value,
-            Color: document.getElementById('f_color').value
-          });
-          fetch('/Ventas/BuscarCamisas?'+p.toString())
-            .then(r=>r.text())
-            .then(html=> document.getElementById('resultadoCamisas').innerHTML = html);
-        }
-        // callback que invoca la tabla parcial
-        function seleccionarCamisa(id){
-          const input = document.querySelector('input[name="CamisaSeleccionadaId"]');
-          input.value = id;
-          const modalEl = document.getElementById('buscarCamisa');
-          const modal = bootstrap.Modal.getInstance(modalEl);
-          modal.hide();
-        }
+        (function(){
+          const $ = s => document.querySelector(s);
+          const qs = params => new URLSearchParams(params).toString();
+
+          // buscar camisas (carga partial)
+          $('#btnBuscar').addEventListener('click', async () => {
+            const url = '@Url.Action("BuscarCamisas", "Ventas")' + '?' + qs({
+              MarcaId: $('#f_marcaId').value || '',
+              Tipo:    $('#f_tipo').value    || '',
+              Talla:   $('#f_talla').value   || '',
+              Manga:   $('#f_manga').value   || '',
+              Color:   $('#f_color').value   || ''
+            });
+            const html = await fetch(url, { headers: { 'X-Requested-With':'XMLHttpRequest' } }).then(r=>r.text());
+            $('#resultadoCamisas').innerHTML = html;
+
+            // enlaza botones "Seleccionar" del partial
+            document.querySelectorAll('[data-select-camisa]').forEach(btn=>{
+                btn.addEventListener('click', e=>{
+                    const id = e.currentTarget.getAttribute('data-id');
+                    document.querySelector('input[name="CamisaSeleccionadaId"]').value = id;
+                    bootstrap.Modal.getInstance(document.getElementById('buscarCamisa')).hide();
+                });
+            });
+        })();
     </script>
 }
