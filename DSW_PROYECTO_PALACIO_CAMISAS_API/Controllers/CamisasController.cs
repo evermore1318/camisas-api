@@ -21,31 +21,58 @@ namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Controllers
                 estanteDB = estanteRepo;
             }
 
-            [HttpGet]
-            public async Task<IActionResult> Listar()
+        [HttpGet]
+        public async Task<IActionResult> Listar(
+           [FromQuery] int? marcaId,
+           [FromQuery] string? tipo,
+           [FromQuery] string? talla,
+           [FromQuery] string? manga,
+           [FromQuery] string? color)
+        {
+            var camisas = await Task.Run(() => camisaDB.Listado()); 
+            // Filtros en memoria e ignoramos mayuscs
+            if (marcaId.HasValue)
+                camisas = camisas.Where(c => c.id_marca == marcaId.Value).ToList();
+
+            if (!string.IsNullOrWhiteSpace(tipo))
+                camisas = camisas.Where(c =>
+                    (c.descripcion ?? string.Empty)
+                    .Contains(tipo, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            if (!string.IsNullOrWhiteSpace(talla))
+                camisas = camisas.Where(c =>
+                    string.Equals(c.talla ?? string.Empty, talla, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            if (!string.IsNullOrWhiteSpace(manga))
+                camisas = camisas.Where(c =>
+                    string.Equals(c.manga ?? string.Empty, manga, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            if (!string.IsNullOrWhiteSpace(color))
+                camisas = camisas.Where(c =>
+                    (c.color ?? string.Empty)
+                    .Contains(color, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            var camisasDto = camisas.Select(c => new CamisaDto
             {
-                var camisas = await Task.Run(() => camisaDB.Listado());
-                var camisasDto = camisas.Select(c => new CamisaDto
-                {
-                    id_camisa = c.id_camisa,
-                    descripcion = c.descripcion,
-                    marca = c.marca_nombre ?? "",
-                    color = c.color,
-                    talla = c.talla,
-                    manga = c.manga,
-                    stock = c.stock,
-                    precio_costo = c.precio_costo,
-                    precio_venta = c.precio_venta,
-                    estante = c.estante_descripcion ?? "",
-                    estado = c.estado,
-                    id_marca = c.id_marca,
-                    id_estante = c.id_estante
-                }).ToList();
+                id_camisa = c.id_camisa,
+                descripcion = c.descripcion,
+                marca = c.marca_nombre ?? "",
+                color = c.color,
+                talla = c.talla,
+                manga = c.manga,
+                stock = c.stock,
+                precio_costo = c.precio_costo,
+                precio_venta = c.precio_venta,
+                estante = c.estante_descripcion ?? "",
+                estado = c.estado,
+                id_marca = c.id_marca,
+                id_estante = c.id_estante
+            }).ToList();
 
-                return Ok(camisasDto);
-            }
+            return Ok(camisasDto);
+        }
 
-            [HttpGet("{id}")]
+        [HttpGet("{id}")]
             public async Task<IActionResult> ObtenerPorId(int id)
             {
                 var camisa = await Task.Run(() => camisaDB.ObtenerPorID(id));

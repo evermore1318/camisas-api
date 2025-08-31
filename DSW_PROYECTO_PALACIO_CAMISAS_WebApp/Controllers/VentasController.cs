@@ -48,8 +48,17 @@ public class VentasController : Controller
         using (var http = new HttpClient())
         {
             http.BaseAddress = new Uri(_config["Services:URL"]);
-            var qs = $"camisas?marcaId={(filtro.MarcaId ?? 0)}&tipo={filtro.Tipo ?? ""}&talla={filtro.Talla ?? ""}&manga={filtro.Manga ?? ""}&color={filtro.Color ?? ""}";
-            var resp = http.GetAsync(qs).Result;
+            var parts = new List<string>();
+            if (filtro != null)
+            {
+                if (filtro.MarcaId.HasValue) parts.Add($"marcaId={filtro.MarcaId.Value}");
+                if (!string.IsNullOrWhiteSpace(filtro.Tipo)) parts.Add($"tipo={Uri.EscapeDataString(filtro.Tipo)}");
+                if (!string.IsNullOrWhiteSpace(filtro.Talla)) parts.Add($"talla={Uri.EscapeDataString(filtro.Talla)}");
+                if (!string.IsNullOrWhiteSpace(filtro.Manga)) parts.Add($"manga={Uri.EscapeDataString(filtro.Manga)}");
+                if (!string.IsNullOrWhiteSpace(filtro.Color)) parts.Add($"color={Uri.EscapeDataString(filtro.Color)}");
+            }
+            var url = "camisas" + (parts.Count > 0 ? "?" + string.Join("&", parts) : "");
+            var resp = http.GetAsync(url).Result;
             var data = resp.Content.ReadAsStringAsync().Result;
             resultado = string.IsNullOrWhiteSpace(data)
                 ? new List<Camisa>()
@@ -81,7 +90,7 @@ public class VentasController : Controller
             var resp = http.GetAsync("marcas").Result;
             var data = resp.Content.ReadAsStringAsync().Result;
             var marcas = string.IsNullOrWhiteSpace(data) ? new List<Marca>() : JsonConvert.DeserializeObject<List<Marca>>(data);
-            ViewBag.Marcas = new SelectList(marcas ?? new List<Marca>(), "Id_Marca", "Descripcion");
+            ViewBag.Marcas = new SelectList(marcas ?? new List<Marca>(), "id_marca", "descripcion");
         }
     }
 
@@ -192,7 +201,7 @@ public class VentasController : Controller
     public IActionResult BuscarCamisas([FromQuery] CamisaFiltro filtro)
     {
         var data = buscarCamisas(filtro);
-        return PartialView("_BuscarCamisasPartial", data);
+        return PartialView("BuscarCamisasPartial.cshtml", data);
     }
 
     // POST: /Ventas/Create  (registrar venta en el back)
