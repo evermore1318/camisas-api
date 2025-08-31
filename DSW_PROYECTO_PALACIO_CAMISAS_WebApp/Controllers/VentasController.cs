@@ -136,6 +136,62 @@ public class VentasController : Controller
                     }
                 };
         }
+        
+        //agregado para el listado de ventas
+        var cache = new Dictionary<int, Camisa>();
+        Camisa GetCamisa(int id)
+        {
+            if (!cache.TryGetValue(id, out var c))
+            {
+                c = obtenerCamisaPorId(id) ?? new Camisa { id_camisa = id, descripcion = "(no encontrada)" };
+                cache[id] = c;
+            }
+            return c;
+        }
+
+        var lineasPorVenta = new Dictionary<int, List<DetalleVentaTotal>>();
+        foreach (var v in ventas)
+        {
+            var lineas = new List<DetalleVentaTotal>();
+            foreach (var d in v.detalles ?? new List<DetalleVenta>())
+            {
+                var c = GetCamisa(d.Id_Camisa);
+                lineas.Add(new DetalleVentaTotal
+                {
+                    Id_Camisa = c.id_camisa,
+                    Descripcion = c.descripcion,
+                    Presentacion = $"{c.color} / {c.talla} / {c.manga}",
+                    Cantidad = d.Cantidad,
+                    PrecioUnitario = d.Precio
+                });
+            }
+            lineasPorVenta[v.id_venta] = lineas;
+        }
+        ViewBag.LineasPorVenta = lineasPorVenta; // para listar boletas eb vista venta
+
+        foreach (var v in ventas) //para poblar correctamente todos los detalles
+        {
+            v.DetallesTotal = new List<DetalleVentaTotal>();
+
+            foreach (var d in v.detalles)
+            {
+                var camisa = obtenerCamisaPorId(d.Id_Camisa);
+                if (camisa != null)
+                {
+                    v.DetallesTotal.Add(new DetalleVentaTotal
+                    {
+                        Id_Camisa = camisa.id_camisa,
+                        Descripcion = camisa.descripcion,
+                        Presentacion = $"{camisa.color} / {camisa.talla} / {camisa.manga}",
+                        Cantidad = d.Cantidad,
+                        PrecioUnitario = d.Precio
+                    });
+                }
+            }
+
+            // recalcular el total en base a los subtotales
+            v.precio_total = v.DetallesTotal.Sum(x => x.Subtotal);
+        }
 
         return View(ventas);
     }

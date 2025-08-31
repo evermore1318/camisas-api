@@ -12,7 +12,7 @@
 
 @foreach (var venta in Model)
 {
-    <div class="card mb-4">
+    <div class="card mb-4 shadow-sm">
         <div class="card-header bg-dark text-white">
             <div class="d-flex justify-content-between">
                 <span>
@@ -21,7 +21,7 @@
                     <strong>Fecha:</strong> @venta.fecha.ToString("dd/MM/yyyy")
                 </span>
                 <span>
-                    <strong>Total: </strong> S/. @venta.precio_total
+                    <strong>Total: </strong> S/. @venta.precio_total.ToString("0.00")
                 </span>
             </div>
         </div>
@@ -30,30 +30,44 @@
                 <thead class="table-light">
                     <tr>
                         <th>Camisa</th>
-                        <th>Color</th>
-                        <th>Talla</th>
-                        <th>Cantidad</th>
-                        <th>Precio Unitario</th>
-                        <th>Subtotal</th>
+                        <th>Presentación (Color/Talla/Manga)</th>
+                        <th class="text-end">Cantidad</th>
+                        <th class="text-end">Precio Unitario</th>
+                        <th class="text-end">Subtotal</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var det in venta.DetallesTotal)
+                    @if (venta.DetallesTotal != null && venta.DetallesTotal.Any())
                     {
-                        <tr>
-                            <td>@det.Descripcion</td>
-                            <td>@det.Cantidad</td>
-                            <td>S/. @det.PrecioUnitario</td>
-                            <td>S/. @(det.Cantidad * det.PrecioUnitario)</td>
-                        </tr>
+                        foreach (var det in venta.DetallesTotal)
+                        {
+                            <tr>
+                                <td>@det.Descripcion</td>
+                                <td>@det.Presentacion</td>
+                                <td class="text-end">@det.Cantidad</td>
+                                <td class="text-end">S/. @det.PrecioUnitario.ToString("0.00")</td>
+                                <td class="text-end">S/. @det.Subtotal.ToString("0.00")</td>
+                            </tr>
+                        }
+                    }
+                    else if (venta.detalles != null && venta.detalles.Any())
+                    {
+                        foreach (var det in venta.detalles)
+                        {
+                            <tr>
+                                <td>Camisa #@det.Id_Camisa</td>
+                                <td>-</td>
+                                <td class="text-end">@det.Cantidad</td>
+                                <td class="text-end">S/. @det.Precio.ToString("0.00")</td>
+                                <td class="text-end">S/. @(det.Cantidad * det.Precio)</td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
         </div>
         <div class="card-footer text-end">
-            <a asp-action="Details" asp-route-id="@venta.id_venta" class="btn btn-info btn-sm">Ver Detalle</a>
             <a asp-action="Edit" asp-route-id="@venta.id_venta" class="btn btn-warning btn-sm">Editar</a>
-            <a asp-action="Delete" asp-route-id="@venta.id_venta" class="btn btn-danger btn-sm">Eliminar</a>
         </div>
     </div>
 }
