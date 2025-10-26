@@ -1,0 +1,1 @@
+web: dotnet DSW_PROYECTO_PALACIO_CAMISAS_API.dll
