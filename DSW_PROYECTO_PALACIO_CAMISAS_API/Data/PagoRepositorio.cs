@@ -1,74 +1,32 @@
 ﻿using DSW_PROYECTO_PALACIO_CAMISAS_API.Data.Contrato;
 using DSW_PROYECTO_PALACIO_CAMISAS_API.Models;
-using Microsoft.Data.SqlClient;
-using System.Data;
 
 namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Data
 {
     public class PagoRepositorio : IPago
     {
-        private readonly string cadenaConexion;
-        private readonly IConfiguration _config;
-        public PagoRepositorio(IConfiguration config)
+        // Datos en memoria TEMPORALES para Pagos
+        private List<Pago> _pagos = new List<Pago>
         {
-            _config = config;
-            cadenaConexion = config["ConnectionStrings:DB"];
-        }
+            new Pago { IdPago = 1, IdPedido = 1, Descripcion = "Pago inicial pedido #001", Fecha = DateTime.Now.AddDays(-5), Monto = 150.50m, Estado = "Completado" },
+            new Pago { IdPago = 2, IdPedido = 2, Descripcion = "Pago pedido #002", Fecha = DateTime.Now.AddDays(-3), Monto = 89.99m, Estado = "Completado" },
+            new Pago { IdPago = 3, IdPedido = 3, Descripcion = "Anticipo pedido #003", Fecha = DateTime.Now.AddDays(-1), Monto = 200.00m, Estado = "Pendiente" }
+        };
+
+        private int _nextId = 4;
 
         public Pago ObtenerPorID(int id)
         {
-            Pago pago = null;
-            using (var conexion = new SqlConnection(cadenaConexion))
-            {
-                conexion.Open();
-                using (var comando = new SqlCommand("ObtenerPagoPorID", conexion))
-                {
-                    comando.CommandType = System.Data.CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@ID", id);
-                    using (var reader = comando.ExecuteReader())
-                    {
-                        if (reader != null && reader.HasRows)
-                        {
-                            reader.Read();
-                            pago = new Pago()
-                            {
-                                IdPago = reader.GetInt32(reader.GetOrdinal("id_pago")),
-                                IdPedido = reader.GetInt32(reader.GetOrdinal("id_pedido")),
-                                Descripcion = reader.GetString(reader.GetOrdinal("descripcion")),
-                                Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
-                                Monto = reader.GetDecimal(reader.GetOrdinal("monto")),
-                                Estado = reader.GetString(reader.GetOrdinal("estado")),
-                            };
-                        }
-                    }
-                }
-            }
-            return pago;
+            return _pagos.FirstOrDefault(p => p.IdPago == id);
         }
 
         public Pago Registrar(Pago pago)
         {
-            Pago nuevoPago = null;
-            int nuevoID = 0;
-
-            using (var conexion = new SqlConnection(cadenaConexion))
-            {
-                conexion.Open();
-                using (var comando = new SqlCommand("RegistrarPago", conexion))
-                {
-                    comando.CommandType = CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@idPedido", pago.IdPedido);
-                    comando.Parameters.AddWithValue("@descripcion", pago.Descripcion);
-                    comando.Parameters.AddWithValue("@fecha", pago.Fecha);
-                    comando.Parameters.AddWithValue("@monto", pago.Monto);
-
-                    nuevoID = Convert.ToInt32(comando.ExecuteScalar());
-                }
-            }
-
-            nuevoPago = ObtenerPorID(nuevoID);
-
-            return nuevoPago;
+            pago.IdPago = _nextId++;
+            pago.Fecha = DateTime.Now;
+            pago.Estado = "Completado";
+            _pagos.Add(pago);
+            return pago;
         }
     }
 }

@@ -1,100 +1,45 @@
 ﻿using DSW_PROYECTO_PALACIO_CAMISAS_API.Data.Contrato;
 using DSW_PROYECTO_PALACIO_CAMISAS_API.Models.DTOs;
-using Microsoft.Data.SqlClient;
-using System.Data;
-using System.Data.Common;
 
 namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Data
 {
     public class FinanzasRepositorio : IFinanzas
     {
-        private readonly string cadenaConexion;
-        private readonly IConfiguration _config;
-        public FinanzasRepositorio(IConfiguration config)
-        {
-            _config = config;
-            cadenaConexion = config["ConnectionStrings:DB"];
-        }
+        // Datos en memoria TEMPORALES para Finanzas
+        private readonly Random _random = new Random();
 
         public decimal ObtenerIngresosMensuales(int anio, int mes)
         {
-            decimal ingresos = 0;
-
-            using (var conexion = new SqlConnection(cadenaConexion))
-            {
-                conexion.Open();
-                using (var comando = new SqlCommand("sp_IngresosMensuales", conexion))
-                {
-                    comando.CommandType = CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@Anio", anio);
-                    comando.Parameters.AddWithValue("@Mes", mes);
-
-                    ingresos = Convert.ToDecimal(comando.ExecuteScalar());
-                }
-            }
-
-            return ingresos;
+            // Simular ingresos mensuales entre $5000 y $15000
+            return _random.Next(5000, 15001);
         }
 
         public decimal ObtenerIngresosAnuales(int anio)
         {
-            decimal ingresos = 0;
-
-            using (var conexion = new SqlConnection(cadenaConexion))
+            // Simular ingresos anuales (suma de meses)
+            decimal total = 0;
+            for (int mes = 1; mes <= 12; mes++)
             {
-                conexion.Open();
-                using (var comando = new SqlCommand("sp_IngresosAnuales", conexion))
-                {
-                    comando.CommandType = CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@Anio", anio);
-
-                    ingresos = Convert.ToDecimal(comando.ExecuteScalar());
-                }
+                total += ObtenerIngresosMensuales(anio, mes);
             }
-
-            return ingresos;
+            return total;
         }
 
-        // -------------------
-        // EGRESOS
-        // -------------------
         public decimal ObtenerEgresosMensuales(int anio, int mes)
         {
-            decimal egresos = 0;
-
-            using (var conexion = new SqlConnection(cadenaConexion))
-            {
-                conexion.Open();
-                using (var comando = new SqlCommand("sp_EgresosMensuales", conexion))
-                {
-                    comando.CommandType = CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@Anio", anio);
-                    comando.Parameters.AddWithValue("@Mes", mes);
-
-                    egresos = Convert.ToDecimal(comando.ExecuteScalar());
-                }
-            }
-
-            return egresos;
+            // Simular egresos mensuales entre $3000 y $8000
+            return _random.Next(3000, 8001);
         }
 
         public decimal ObtenerEgresosAnuales(int anio)
         {
-            decimal egresos = 0;
-
-            using (var conexion = new SqlConnection(cadenaConexion))
+            // Simular egresos anuales (suma de meses)
+            decimal total = 0;
+            for (int mes = 1; mes <= 12; mes++)
             {
-                conexion.Open();
-                using (var comando = new SqlCommand("sp_EgresosAnuales", conexion))
-                {
-                    comando.CommandType = CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@Anio", anio);
-
-                    egresos = Convert.ToDecimal(comando.ExecuteScalar());
-                }
+                total += ObtenerEgresosMensuales(anio, mes);
             }
-
-            return egresos;
+            return total;
         }
 
         public FinanzasDto ObtenerResumen(int anio, int mes)

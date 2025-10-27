@@ -1,260 +1,114 @@
 ﻿using DSW_PROYECTO_PALACIO_CAMISAS_API.Data.Contrato;
 using DSW_PROYECTO_PALACIO_CAMISAS_API.Models;
-using Microsoft.Data.SqlClient;
 
 namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Data
 {
     public class VentaRepositorio : IVenta
     {
-        private readonly string cadenaConexion;
-        private readonly IConfiguration _config;
-
-        public VentaRepositorio(IConfiguration config)
+        // Datos en memoria TEMPORALES para Ventas
+        private List<Venta> _ventas = new List<Venta>
         {
-            _config = config;
-            cadenaConexion = _config["ConnectionStrings:DB"];
-        }
+            new Venta {
+                id_venta = 1,
+                nombre_cliente = "Juan Pérez",
+                dni_cliente = "12345678",
+                tipo_pago = "Tarjeta",
+                fecha = DateTime.Now.AddDays(-3),
+                precio_total = 149.95m,
+                estado = "Completado",
+                detalles = new List<DetalleVenta>
+                {
+                    new DetalleVenta { id_venta = 1, id_camisa = 1, cantidad = 2, precio = 29.99m, estado = "Activo",
+                                     camisa_descripcion = "Camisa Deportiva Nike", camisa_color = "Azul",
+                                     camisa_talla = "M", camisa_manga = "Corta", marca_nombre = "Nike" },
+                    new DetalleVenta { id_venta = 1, id_camisa = 2, cantidad = 3, precio = 89.97m, estado = "Activo",
+                                     camisa_descripcion = "Camisa Casual Adidas", camisa_color = "Blanca",
+                                     camisa_talla = "L", camisa_manga = "Larga", marca_nombre = "Adidas" }
+                }
+            },
+            new Venta {
+                id_venta = 2,
+                nombre_cliente = "María García",
+                dni_cliente = "87654321",
+                tipo_pago = "Efectivo",
+                fecha = DateTime.Now.AddDays(-1),
+                precio_total = 74.97m,
+                estado = "Completado",
+                detalles = new List<DetalleVenta>
+                {
+                    new DetalleVenta { id_venta = 2, id_camisa = 3, cantidad = 3, precio = 74.97m, estado = "Activo",
+                                     camisa_descripcion = "Camisa Elegante Puma", camisa_color = "Negra",
+                                     camisa_talla = "S", camisa_manga = "Larga", marca_nombre = "Puma" }
+                }
+            },
+            new Venta {
+                id_venta = 3,
+                nombre_cliente = "Carlos López",
+                dni_cliente = "11223344",
+                tipo_pago = "Transferencia",
+                fecha = DateTime.Now,
+                precio_total = 119.96m,
+                estado = "Pendiente",
+                detalles = new List<DetalleVenta>
+                {
+                    new DetalleVenta { id_venta = 3, id_camisa = 1, cantidad = 4, precio = 119.96m, estado = "Activo",
+                                     camisa_descripcion = "Camisa Deportiva Nike", camisa_color = "Azul",
+                                     camisa_talla = "M", camisa_manga = "Corta", marca_nombre = "Nike" }
+                }
+            }
+        };
+
+        private int _nextId = 4;
 
         public List<Venta> Listado()
         {
-            var listado = new List<Venta>();
-            using (var conexion = new SqlConnection(cadenaConexion))
-            {
-                conexion.Open();
-                using (var comando = new SqlCommand("ListarVentasConDetalles", conexion))
-                {
-                    comando.CommandType = System.Data.CommandType.StoredProcedure;
-                    using (var reader = comando.ExecuteReader())
-                    {
-                        var ventasDict = new Dictionary<int, Venta>();
-
-                        while (reader.Read())
-                        {
-                            int idVenta = reader.GetInt32(0);
-
-                            if (!ventasDict.ContainsKey(idVenta))
-                            {
-                                ventasDict[idVenta] = new Venta()
-                                {
-                                    id_venta = idVenta,
-                                    nombre_cliente = reader.GetString(1),
-                                    dni_cliente = reader.GetString(2),
-                                    tipo_pago = reader.GetString(3),
-                                    fecha = reader.GetDateTime(4),
-                                    precio_total = reader.GetDecimal(5),
-                                    estado = reader.GetString(6),
-                                    detalles = new List<DetalleVenta>()
-                                };
-                            }
-
-                            if (!reader.IsDBNull(7))
-                            {
-                                var detalle = new DetalleVenta()
-                                {
-                                    id_venta = idVenta,
-                                    id_camisa = reader.GetInt32(7),
-                                    cantidad = reader.GetInt32(8),
-                                    precio = reader.GetDecimal(9),
-                                    estado = reader.GetString(10),
-                                    camisa_descripcion = reader.GetString(11),
-                                    camisa_color = reader.GetString(12),
-                                    camisa_talla = reader.GetString(13),
-                                    camisa_manga = reader.GetString(14),
-                                    marca_nombre = reader.GetString(15)
-                                };
-
-                                ventasDict[idVenta].detalles.Add(detalle);
-                            }
-                        }
-
-                        listado = ventasDict.Values.ToList();
-                    }
-                }
-            }
-            return listado;
+            return _ventas;
         }
 
         public Venta ObtenerPorID(int id)
         {
-            Venta venta = null;
-            using (var conexion = new SqlConnection(cadenaConexion))
-            {
-                conexion.Open();
-                using (var comando = new SqlCommand("ObtenerVentaPorIDConDetalles", conexion))
-                {
-                    comando.CommandType = System.Data.CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@id_venta", id);
-                    using (var reader = comando.ExecuteReader())
-                    {
-                        var detalles = new List<DetalleVenta>();
-
-                        while (reader.Read())
-                        {
-                            if (venta == null)
-                            {
-                                venta = new Venta()
-                                {
-                                    id_venta = reader.GetInt32(0),
-                                    nombre_cliente = reader.GetString(1),
-                                    dni_cliente = reader.GetString(2),
-                                    tipo_pago = reader.GetString(3),
-                                    fecha = reader.GetDateTime(4),
-                                    precio_total = reader.GetDecimal(5),
-                                    estado = reader.GetString(6),
-                                    detalles = new List<DetalleVenta>()
-                                };
-                            }
-
-                            if (!reader.IsDBNull(7))
-                            {
-                                var detalle = new DetalleVenta()
-                                {
-                                    id_venta = id,
-                                    id_camisa = reader.GetInt32(7),
-                                    cantidad = reader.GetInt32(8),
-                                    precio = reader.GetDecimal(9),
-                                    estado = reader.GetString(10),
-                                    camisa_descripcion = reader.GetString(11),
-                                    camisa_color = reader.GetString(12),
-                                    camisa_talla = reader.GetString(13),
-                                    camisa_manga = reader.GetString(14),
-                                    marca_nombre = reader.GetString(15)
-                                };
-
-                                venta.detalles.Add(detalle);
-                            }
-                        }
-                    }
-                }
-            }
-            return venta;
+            return _ventas.FirstOrDefault(v => v.id_venta == id);
         }
 
         public List<DetalleVenta> ObtenerDetallesPorVentaID(int idVenta)
         {
-            var detalles = new List<DetalleVenta>();
-            using (var conexion = new SqlConnection(cadenaConexion))
-            {
-                conexion.Open();
-                using (var comando = new SqlCommand("ObtenerDetallesPorVenta", conexion))
-                {
-                    comando.CommandType = System.Data.CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@id_venta", idVenta);
-                    using (var reader = comando.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            detalles.Add(new DetalleVenta()
-                            {
-                                id_venta = idVenta,
-                                id_camisa = reader.GetInt32(0),
-                                cantidad = reader.GetInt32(1),
-                                precio = reader.GetDecimal(2),
-                                estado = reader.GetString(3),
-                                camisa_descripcion = reader.GetString(4),
-                                camisa_color = reader.GetString(5),
-                                camisa_talla = reader.GetString(6),
-                                camisa_manga = reader.GetString(7),
-                                marca_nombre = reader.GetString(8)
-                            });
-                        }
-                    }
-                }
-            }
-            return detalles;
+            var venta = _ventas.FirstOrDefault(v => v.id_venta == idVenta);
+            return venta?.detalles ?? new List<DetalleVenta>();
         }
 
         public Venta Registrar(Venta venta, List<DetalleVenta> detalles)
         {
-            Venta nuevaVenta = null;
-            int nuevoId = 0;
+            venta.id_venta = _nextId++;
+            venta.fecha = DateTime.Now;
+            venta.estado = "Pendiente";
+            venta.detalles = detalles;
 
-            using (var conexion = new SqlConnection(cadenaConexion))
+            // Asignar el id_venta a cada detalle
+            foreach (var detalle in detalles)
             {
-                conexion.Open();
-                using (var transaccion = conexion.BeginTransaction())
-                {
-                    try
-                    {
-                        using (var comando = new SqlCommand("RegistrarVenta", conexion, transaccion))
-                        {
-                            comando.CommandType = System.Data.CommandType.StoredProcedure;
-                            comando.Parameters.AddWithValue("@nombre_cliente", venta.nombre_cliente);
-                            comando.Parameters.AddWithValue("@dni_cliente", venta.dni_cliente);
-                            comando.Parameters.AddWithValue("@tipo_pago", venta.tipo_pago);
-                            comando.Parameters.AddWithValue("@fecha", venta.fecha);
-                            comando.Parameters.AddWithValue("@precio_total", venta.precio_total);
-                            comando.Parameters.AddWithValue("@estado", venta.estado);
-                            nuevoId = Convert.ToInt32(comando.ExecuteScalar());
-                        }
-
-                        foreach (var detalle in detalles)
-                        {
-                            using (var comando = new SqlCommand("RegistrarDetalleVenta", conexion, transaccion))
-                            {
-                                comando.CommandType = System.Data.CommandType.StoredProcedure;
-                                comando.Parameters.AddWithValue("@id_venta", nuevoId);
-                                comando.Parameters.AddWithValue("@id_camisa", detalle.id_camisa);
-                                comando.Parameters.AddWithValue("@cantidad", detalle.cantidad);
-                                comando.Parameters.AddWithValue("@precio", detalle.precio);
-                                comando.Parameters.AddWithValue("@estado", detalle.estado);
-                                comando.ExecuteNonQuery();
-                            }
-                        }
-
-                        transaccion.Commit();
-                    }
-                    catch
-                    {
-                        transaccion.Rollback();
-                        throw;
-                    }
-                }
+                detalle.id_venta = venta.id_venta;
+                detalle.estado = "Activo";
             }
-            nuevaVenta = ObtenerPorID(nuevoId);
-            return nuevaVenta;
+
+            _ventas.Add(venta);
+            return venta;
         }
 
         public bool ActualizarEstado(int id, string estado)
         {
-            var exito = false;
-            using (var conexion = new SqlConnection(cadenaConexion))
+            var venta = _ventas.FirstOrDefault(v => v.id_venta == id);
+            if (venta != null)
             {
-                conexion.Open();
-                using (var transaccion = conexion.BeginTransaction())
+                venta.estado = estado;
+
+                // Actualizar estado de los detalles también
+                foreach (var detalle in venta.detalles)
                 {
-                    try
-                    {
-
-                        using (var comando = new SqlCommand("ActualizarEstadoVenta", conexion, transaccion))
-                        {
-                            comando.CommandType = System.Data.CommandType.StoredProcedure;
-                            comando.Parameters.AddWithValue("@id_venta", id);
-                            comando.Parameters.AddWithValue("@estado", estado);
-                            exito = comando.ExecuteNonQuery() > 0;
-                        }
-
-                        if (exito)
-                        {
-                            using (var comando = new SqlCommand("ActualizarEstadoDetalleVenta", conexion, transaccion))
-                            {
-                                comando.CommandType = System.Data.CommandType.StoredProcedure;
-                                comando.Parameters.AddWithValue("@id_venta", id);
-                                comando.Parameters.AddWithValue("@estado", estado);
-                                comando.ExecuteNonQuery();
-                            }
-                        }
-
-                        transaccion.Commit();
-                    }
-                    catch
-                    {
-                        transaccion.Rollback();
-                        throw;
-                    }
+                    detalle.estado = estado;
                 }
+                return true;
             }
-            return exito;
+            return false;
         }
     }
 }

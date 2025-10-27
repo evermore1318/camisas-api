@@ -1,151 +1,134 @@
 ﻿using DSW_PROYECTO_PALACIO_CAMISAS_API.Data.Contrato;
 using DSW_PROYECTO_PALACIO_CAMISAS_API.Models;
-using Microsoft.Data.SqlClient;
 
 namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Data
 {
     public class UsuarioRepositorio : IUsuario
     {
-        private readonly string cadenaConexion;
-        private readonly IConfiguration _config;
-
-        public UsuarioRepositorio(IConfiguration config)
+        // Datos en memoria TEMPORALES para Usuarios
+        private List<Usuario> _usuarios = new List<Usuario>
         {
-            _config = config;
-            cadenaConexion = _config["ConnectionStrings:DB"];
-        }
+            new Usuario {
+                IdUsuario = 1,
+                Nombre = "admin",
+                Password = "admin123",
+                IdRol = 1,
+                Estado = "Activo",
+                RolDescripcion = "Administrador"
+            },
+            new Usuario {
+                IdUsuario = 2,
+                Nombre = "vendedor1",
+                Password = "vendedor123",
+                IdRol = 2,
+                Estado = "Activo",
+                RolDescripcion = "Vendedor"
+            },
+            new Usuario {
+                IdUsuario = 3,
+                Nombre = "inventario",
+                Password = "inventario123",
+                IdRol = 3,
+                Estado = "Activo",
+                RolDescripcion = "Inventario"
+            },
+            new Usuario {
+                IdUsuario = 4,
+                Nombre = "vendedor2",
+                Password = "vendedor456",
+                IdRol = 2,
+                Estado = "Inactivo",
+                RolDescripcion = "Vendedor"
+            }
+        };
+
+        private List<Rol> _roles = new List<Rol>
+        {
+            new Rol { IdRol = 1, Descripcion = "Administrador", Estado = "Activo" },
+            new Rol { IdRol = 2, Descripcion = "Vendedor", Estado = "Activo" },
+            new Rol { IdRol = 3, Descripcion = "Inventario", Estado = "Activo" }
+        };
+
+        private int _nextId = 5;
 
         public List<Usuario> ListadoUsuarios()
         {
-            var listado = new List<Usuario>();
-            using (var conexion = new SqlConnection(cadenaConexion))
+            return _usuarios.Select(u => new Usuario
             {
-                conexion.Open();
-                using (var comando = new SqlCommand("ListarUsuarios", conexion))
-                {
-                    comando.CommandType = System.Data.CommandType.StoredProcedure;
-                    using (var lector = comando.ExecuteReader())
-                    {
-                        while (lector.Read())
-                            listado.Add(ReaderToUsuarioSinPassword(lector));
-                    }
-                }
-            }
-            return listado;
+                IdUsuario = u.IdUsuario,
+                Nombre = u.Nombre,
+                IdRol = u.IdRol,
+                RolDescripcion = u.RolDescripcion,
+                Estado = u.Estado
+            }).ToList();
         }
 
         public Usuario ObtenerPorID(int id)
         {
-            Usuario usuario = null;
-            using (var conexion = new SqlConnection(cadenaConexion))
+            var usuario = _usuarios.FirstOrDefault(u => u.IdUsuario == id);
+            if (usuario != null)
             {
-                conexion.Open();
-                using (var comando = new SqlCommand("ObtenerUsuarioPorID", conexion))
+                return new Usuario
                 {
-                    comando.CommandType = System.Data.CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@Id", id);
-                    using (var lector = comando.ExecuteReader())
-                    {
-                        if (lector != null && lector.HasRows)
-                        {
-                            lector.Read();
-                            usuario = ReaderToUsuarioSinPassword(lector);
-                        }
-                    }
-                }
+                    IdUsuario = usuario.IdUsuario,
+                    Nombre = usuario.Nombre,
+                    IdRol = usuario.IdRol,
+                    RolDescripcion = usuario.RolDescripcion,
+                    Estado = usuario.Estado
+                };
             }
-            return usuario;
+            return null;
         }
 
         public Usuario Registrar(Usuario usuario)
         {
+            usuario.IdUsuario = _nextId++;
+            usuario.Estado = "Activo";
+            usuario.RolDescripcion = _roles.FirstOrDefault(r => r.IdRol == usuario.IdRol)?.Descripcion ?? "Usuario";
+            _usuarios.Add(usuario);
 
-            int nuevoID = 0;
-            using (var conexion = new SqlConnection(cadenaConexion))
+            return new Usuario
             {
-                conexion.Open();
-                using (var comando = new SqlCommand("RegistrarUsuario", conexion))
-                {
-                    comando.CommandType = System.Data.CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@Nombre", usuario.Nombre);
-                    comando.Parameters.AddWithValue("@Password", usuario.Password);
-                    comando.Parameters.AddWithValue("@IdRol", usuario.IdRol);
-                    comando.Parameters.AddWithValue("@Estado", usuario.Estado);
-                    nuevoID = Convert.ToInt32(comando.ExecuteScalar());
-                }
-            }
-            return ObtenerPorID(nuevoID);
-            
+                IdUsuario = usuario.IdUsuario,
+                Nombre = usuario.Nombre,
+                IdRol = usuario.IdRol,
+                RolDescripcion = usuario.RolDescripcion,
+                Estado = usuario.Estado
+            };
         }
 
         public Usuario ActualizarEstado(int id, string nuevoEstado)
         {
-            using (var conexion = new SqlConnection(cadenaConexion))
+            var usuario = _usuarios.FirstOrDefault(u => u.IdUsuario == id);
+            if (usuario != null)
             {
-                conexion.Open();
-                using (var comando = new SqlCommand("ActualizarEstadoUsuario", conexion))
+                usuario.Estado = nuevoEstado;
+                return new Usuario
                 {
-                    comando.CommandType = System.Data.CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@Id", id);
-                    comando.Parameters.AddWithValue("@Estado", nuevoEstado);
-                    comando.ExecuteNonQuery();
-                }
+                    IdUsuario = usuario.IdUsuario,
+                    Nombre = usuario.Nombre,
+                    IdRol = usuario.IdRol,
+                    RolDescripcion = usuario.RolDescripcion,
+                    Estado = usuario.Estado
+                };
             }
-            return ObtenerPorID(id);
+            return null;
         }
-
 
         public List<Rol> ListadoRoles()
         {
-            var roles = new List<Rol>();
-            using (var conexion = new SqlConnection(cadenaConexion))
-            {
-                conexion.Open();
-                using (var comando = new SqlCommand("ListarRoles", conexion))
-                {
-                    comando.CommandType = System.Data.CommandType.StoredProcedure;
-                    using (var lector = comando.ExecuteReader())
-                    {
-                        while (lector.Read())
-                        {
-                            roles.Add(new Rol
-                            {
-                                IdRol = lector.GetInt32(lector.GetOrdinal("IdRol")),
-                                Descripcion = lector.GetString(lector.GetOrdinal("Descripcion")),
-                                Estado = lector.GetString(lector.GetOrdinal("Estado"))
-                            });
-                        }
-                    }
-                }
-            }
-            return roles;
+            return _roles.Where(r => r.Estado == "Activo").ToList();
         }
 
-        public bool Eliminar(int id) 
+        public bool Eliminar(int id)
         {
-            using (var conexion = new SqlConnection(cadenaConexion))
+            var usuario = _usuarios.FirstOrDefault(u => u.IdUsuario == id);
+            if (usuario != null)
             {
-                conexion.Open();
-                using (var comando = new SqlCommand("EliminarUsuario", conexion))
-                {
-                    comando.CommandType = System.Data.CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@Id", id);
-                    return comando.ExecuteNonQuery() > 0;
-                }
+                _usuarios.Remove(usuario);
+                return true;
             }
-        }
-
-        // sin password
-        private Usuario ReaderToUsuarioSinPassword(SqlDataReader reader)
-        {
-            return new Usuario
-            {
-                IdUsuario = reader.GetInt32(reader.GetOrdinal("IdUsuario")),
-                Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
-                IdRol = reader.GetInt32(reader.GetOrdinal("IdRol")),
-                RolDescripcion = reader.GetString(reader.GetOrdinal("RolDescripcion")),
-                Estado = reader.GetString(reader.GetOrdinal("Estado"))
-            };
+            return false;
         }
     }
 }

@@ -1,137 +1,98 @@
 ﻿using DSW_PROYECTO_PALACIO_CAMISAS_API.Data.Contrato;
 using DSW_PROYECTO_PALACIO_CAMISAS_API.Models;
-using Microsoft.Data.SqlClient;
-using System.Reflection.PortableExecutable;
 
 namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Data
 {
     public class PedidoRepositorio : IPedido
     {
-        private readonly string cadenaConexion;
-        private readonly IConfiguration _config;
-        public PedidoRepositorio(IConfiguration config)
+        // Datos en memoria TEMPORALES para Pedidos
+        private List<Pedido> _pedidos = new List<Pedido>
         {
-            _config = config;
-            cadenaConexion = config["ConnectionStrings:DB"];
-        }
-
-        public Pedido Actualizar(Pedido pedido)
-        {
-            using (var conexion = new SqlConnection(cadenaConexion))
-            {
-                conexion.Open();
-                using (var command = new SqlCommand("ActualizarPedido", conexion))
-                {
-                    command.CommandType = System.Data.CommandType.StoredProcedure;
-                    command.Parameters.AddWithValue("id", pedido.IdPedido);
-                    command.Parameters.AddWithValue("@descripcion", pedido.Descripcion);
-                    command.Parameters.AddWithValue("@proveedor", pedido.IdProveedor);
-                    command.Parameters.AddWithValue("@fecha", pedido.Fecha);
-                    command.Parameters.AddWithValue("@monto", pedido.Monto);
-                    command.Parameters.AddWithValue("estado", pedido.Estado);
-                    command.ExecuteNonQuery();
-                }
+            new Pedido {
+                IdPedido = 1,
+                Descripcion = "Pedido de camisas deportivas Nike",
+                IdProveedor = 1,
+                Fecha = DateTime.Now.AddDays(-10),
+                Monto = 1500.00m,
+                Estado = "Completado",
+                Proveedor = new Proveedor { IdProveedor = 1, Nombre = "Proveedor Nike" },
+                CantidadPagos = 2,
+                MontoTotalPagos = 1500.00m,
+                DeudaPendiente = 0.00m
+            },
+            new Pedido {
+                IdPedido = 2,
+                Descripcion = "Pedido de camisas Adidas verano",
+                IdProveedor = 2,
+                Fecha = DateTime.Now.AddDays(-5),
+                Monto = 1200.00m,
+                Estado = "En proceso",
+                Proveedor = new Proveedor { IdProveedor = 2, Nombre = "Proveedor Adidas" },
+                CantidadPagos = 1,
+                MontoTotalPagos = 600.00m,
+                DeudaPendiente = 600.00m
+            },
+            new Pedido {
+                IdPedido = 3,
+                Descripcion = "Pedido camisas Puma temporada",
+                IdProveedor = 3,
+                Fecha = DateTime.Now.AddDays(-2),
+                Monto = 800.00m,
+                Estado = "Pendiente",
+                Proveedor = new Proveedor { IdProveedor = 3, Nombre = "Proveedor Puma" },
+                CantidadPagos = 0,
+                MontoTotalPagos = 0.00m,
+                DeudaPendiente = 800.00m
             }
-            return pedido;
-        }
+        };
 
-        public bool Eliminar(int id)
-        {
-            throw new NotImplementedException();
-        }
+        private int _nextId = 4;
 
         public List<Pedido> Listado()
         {
-            var listado = new List<Pedido>();
-            using (var conexion = new SqlConnection(cadenaConexion))
-            {
-                conexion.Open();
-                using (var command = new SqlCommand("ListarPedidos", conexion))
-                {
-                    command.CommandType = System.Data.CommandType.StoredProcedure;
-                    using (var reader = command.ExecuteReader())
-                    {
-                        if (reader != null && reader.HasRows)
-                        {
-                            while (reader.Read())
-                            {
-                                listado.Add(new Pedido()
-                                {
-                                    IdPedido = reader.GetInt32(reader.GetOrdinal("id_pedido")),
-                                    Descripcion = reader.GetString(reader.GetOrdinal("descripcion")),
-                                    IdProveedor = reader.GetInt32(reader.GetOrdinal("id_proveedor")),
-                                    Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
-                                    Monto = reader.GetDecimal(reader.GetOrdinal("monto")),
-                                    Estado = reader.GetString(reader.GetOrdinal("estado")),
-                                    Proveedor = new Proveedor()
-                                    {
-                                        IdProveedor = reader.GetInt32(reader.GetOrdinal("id_proveedor")),
-                                        Nombre = reader.GetString(reader.GetOrdinal("nombre_proveedor"))
-                                    }
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-            return listado;
+            return _pedidos;
         }
 
         public Pedido ObtenerPorID(int id)
         {
-            Pedido pedido = null;
-            using (var conexion = new SqlConnection(cadenaConexion))
-            {
-                conexion.Open();
-                using (var comando = new SqlCommand("ObtenerPedidoPorID", conexion))
-                {
-                    comando.CommandType = System.Data.CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@ID", id);
-                    using (var reader = comando.ExecuteReader())
-                    {
-                        if (reader != null && reader.HasRows)
-                        {
-                            reader.Read();
-                            pedido = new Pedido()
-                            {
-                                IdPedido = reader.GetInt32(reader.GetOrdinal("id_pedido")),
-                                Descripcion = reader.GetString(reader.GetOrdinal("descripcion")),
-                                IdProveedor = reader.GetInt32(reader.GetOrdinal("id_proveedor")),
-                                Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
-                                Monto = reader.GetDecimal(reader.GetOrdinal("monto")),
-                                Estado = reader.GetString(reader.GetOrdinal("estado")),
-                                CantidadPagos = reader.GetInt32(reader.GetOrdinal("CantidadPagos")),
-                                MontoTotalPagos = reader.GetDecimal(reader.GetOrdinal("MontoTotalPagos")),
-                                DeudaPendiente = reader.GetDecimal(reader.GetOrdinal("DeudaPendiente"))
-                            };
-                        }
-                    }
-                }
-            }
-            return pedido;
+            return _pedidos.FirstOrDefault(p => p.IdPedido == id);
         }
 
         public Pedido Registrar(Pedido pedido)
         {
-            Pedido nuevoPedido = null;
-            int nuevoID = 0;
-
-            using (var conexion = new SqlConnection(cadenaConexion))
-            {
-                conexion.Open();
-                using (var comando = new SqlCommand("RegistrarPedido", conexion))
-                {
-                    comando.CommandType = System.Data.CommandType.StoredProcedure;
-                    comando.Parameters.AddWithValue("@descripcion", pedido.Descripcion);
-                    comando.Parameters.AddWithValue("@proveedor", pedido.IdProveedor);
-                    comando.Parameters.AddWithValue("@fecha", pedido.Fecha);
-                    comando.Parameters.AddWithValue("@monto", pedido.Monto);
-                    nuevoID = Convert.ToInt32(comando.ExecuteScalar());
-                }
-            }
-            nuevoPedido = ObtenerPorID(nuevoID);
-            return nuevoPedido;
+            pedido.IdPedido = _nextId++;
+            pedido.Fecha = DateTime.Now;
+            pedido.Estado = "Pendiente";
+            pedido.CantidadPagos = 0;
+            pedido.MontoTotalPagos = 0;
+            pedido.DeudaPendiente = pedido.Monto;
+            _pedidos.Add(pedido);
+            return pedido;
         }
 
+        public Pedido Actualizar(Pedido pedido)
+        {
+            var existente = _pedidos.FirstOrDefault(p => p.IdPedido == pedido.IdPedido);
+            if (existente != null)
+            {
+                existente.Descripcion = pedido.Descripcion;
+                existente.IdProveedor = pedido.IdProveedor;
+                existente.Fecha = pedido.Fecha;
+                existente.Monto = pedido.Monto;
+                existente.Estado = pedido.Estado;
+            }
+            return existente;
+        }
+
+        public bool Eliminar(int id)
+        {
+            var pedido = _pedidos.FirstOrDefault(p => p.IdPedido == id);
+            if (pedido != null)
+            {
+                _pedidos.Remove(pedido);
+                return true;
+            }
+            return false;
+        }
     }
 }
