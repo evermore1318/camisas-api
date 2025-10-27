@@ -21,5 +21,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
 EXPOSE 80
-EXPOSE 443
+ENV ASPNETCORE_URLS=http://+:80
 ENTRYPOINT ["dotnet", "DSW_PROYECTO_PALACIO_CAMISAS_API.dll"]
