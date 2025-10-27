@@ -1,0 +1,13 @@
+**/.dockerignore
+**/.git
+**/.gitignore
+**/.vs
+**/bin
+**/obj
+**/publish
+Dockerfile*
+docker-compose*
+.dockerignore
+.git
+.gitignore
+README.md
