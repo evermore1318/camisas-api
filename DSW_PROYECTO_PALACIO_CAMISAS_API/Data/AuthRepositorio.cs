@@ -1,35 +1,36 @@
-﻿using DSW_PROYECTO_PALACIO_CAMISAS_API.Data.Contrato;
+﻿using Microsoft.AspNetCore.Mvc;
+using DSW_PROYECTO_PALACIO_CAMISAS_API.Data;
 using DSW_PROYECTO_PALACIO_CAMISAS_API.Models.DTOs;
+using DSW_PROYECTO_PALACIO_CAMISAS_API.Data.Contrato;
 
-namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Data
+namespace DSW_PROYECTO_PALACIO_CAMISAS_API.Controllers
 {
-    public class AuthRepositorio : IAuth
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AuthController : ControllerBase
     {
-        // Datos en memoria TEMPORALES para Autenticación
-        private List<UsuarioDTO> _usuariosAuth = new List<UsuarioDTO>
-        {
-            new UsuarioDTO { ID = 1, NombreUsuario = "admin", Rol = "Administrador" },
-            new UsuarioDTO { ID = 2, NombreUsuario = "vendedor1", Rol = "Vendedor" },
-            new UsuarioDTO { ID = 3, NombreUsuario = "inventario", Rol = "Inventario" }
-        };
+        private readonly IAuth _authRepositorio;
 
-        // Credenciales válidas (usuario: clave)
-        private Dictionary<string, string> _credenciales = new Dictionary<string, string>
+        public AuthController(IAuth authRepositorio)
         {
-            { "admin", "admin123" },
-            { "vendedor1", "vendedor123" },
-            { "inventario", "inventario123" }
-        };
-
-        public UsuarioDTO Login(string usuario, string clave)
-        {
-            // Verificar credenciales
-            if (_credenciales.ContainsKey(usuario) && _credenciales[usuario] == clave)
-            {
-                return _usuariosAuth.FirstOrDefault(u => u.NombreUsuario == usuario);
-            }
-
-            return null; // Login fallido
+            _authRepositorio = authRepositorio;
         }
+
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] LoginRequest request)
+        {
+            var usuario = _authRepositorio.Login(request.Usuario, request.Clave);
+
+            if (usuario == null)
+                return Unauthorized("Credenciales incorrectas");
+
+            return Ok(usuario);
+        }
+    }
+
+    public class LoginRequest
+    {
+        public string Usuario { get; set; }
+        public string Clave { get; set; }
     }
 }
