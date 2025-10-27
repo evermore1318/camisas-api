@@ -19,20 +19,20 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Middleware CORREGIDO - poner ANTES de next()
+// MIDDLEWARE CORREGIDO - Headers ANTES de next()
 app.Use(async (context, next) =>
 {
-    // Configurar headers ANTES de ejecutar el siguiente middleware
     context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
     context.Response.Headers["Pragma"] = "no-cache";
     context.Response.Headers["Expires"] = "0";
 
-    await next(); // Ahora sí ejecutar el siguiente middleware
+    await next(); // Ahora sí ejecutar
 });
 
 app.UseSession();
 app.UseAuthorization();
 
+// Mantener Login como ruta default (ya que tienes el controlador)
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Login}/{action=Index}/{id?}");
